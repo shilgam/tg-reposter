@@ -1,10 +1,10 @@
-# _project_config.md
+# project_config.md
 
 Last-Updated: 2025-06-22
 
 ## Project Goal
 
-Automate copying every message from a Telegram channel to channel so that the posts look freshly authored—no forwarding trace, no original-sender metadata.
+Automate copying every message from a Telegram channel to channel so that the posts look freshly authored—no forwarding trace, no original-sender metadata, and (optionally) deleting prior posts on demand.
 
 ## Tech Stack
 
@@ -12,9 +12,15 @@ Automate copying every message from a Telegram channel to channel so that the po
 - **Framework(s) & Libraries:** Telethon 1.x, Click (CLI), asyncio
 - **Build / Tooling:** Poetry, Ruff, isort, pytest, Make, Docker
 
-## Critical Patterns & Conventions
+## Core Capabilities
 
-- **No forwarding ever** – use Telethon `send_*` methods exclusively.
+- Repost **text, captions, single photos, and multi-photo albums**
+- Preserve Markdown / HTML formatting verbatim
+- Always use Telethon `send_*` methods — never forward
+- **Optionally delete** destination messages supplied via list file
+- **Configurable delay** (default: 31 seconds) between sends
+
+## Critical Patterns & Conventions
 - Directory layout:
   ```
   ./temp/input/   # source_urls.txt, dest_urls_to_delete.txt
@@ -28,6 +34,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 - Secrets never live in code — load via  `.env`.
 - Every new feature ships with unit tests that stub Telegram I/O.
 - Docs avoid tables unless tables are essential.
+- `make delete` defaults to the most-recent `*_old_dest_urls.txt` when `LIST=` is omitted (for easier interactive use).
 
 ## Constraints
 
@@ -35,6 +42,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 - **Data integrity**: stop immediately on first failure; never leave partial state.
 - **Security**: keep `*.session` files out of VCS; redact PII in logs.
 - **Compliance**: accommodate channel owners’ privacy requirement of stripping original metadata.
+- **No Bot API** – tool must authenticate with a **user session**, never a bot token.
 
 ## Tokenization Settings
 
