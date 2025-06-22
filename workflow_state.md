@@ -2,33 +2,17 @@
 _Last updated: 2025-06-22_
 
 ## State
-Phase: CONSTRUCT
+Phase: VALIDATE
 Status: RUNNING
-CurrentItem: 6
+CurrentItem: 7
 
 ## Plan
-1.  **Create Workflow Directory**:
-    *   Create the `.github/workflows` directory if it doesn't exist.
-2.  **Create CI Docker Compose File**:
-    *   Create a new file named `docker-compose.ci.yml`.
-    *   Define a `reposter` service that builds the Docker image.
-    *   Override the service's command to execute `make test`. This ensures tests run inside the container.
-3.  **Create CI Workflow File**:
-    *   Create a new file named `.github/workflows/ci.yml`.
-4.  **Define Workflow Triggers**:
-    *   Configure the workflow to run on all `push` events and all `pull_request` events.
-5.  **Define CI Job**:
-    *   Create a single job named `ci`.
-    *   Specify the runner as `ubuntu-latest`.
-6.  **Define Job Steps**:
-    *   Use `actions/checkout@v4` to check out the repository code.
-    *   Add a step to run the tests using Docker Compose:
-        *   Command: `docker-compose -f docker-compose.ci.yml up --build --abort-on-container-exit --exit-code-from reposter`
-        *   This command builds the image and runs the test container. The workflow will fail if the tests fail.
-7.  **Verify Workflow**:
-    *   Instruct the user to commit and push the new files (`.github/workflows/ci.yml` and `docker-compose.ci.yml`).
-    *   Ask the user to confirm that the workflow triggers and succeeds on GitHub.
-8.  **Update State**: Set item 6 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 7`.
+1.  **Create test directory**: Create the `tests/` directory if it doesn't exist.
+2.  **Install pytest**: Add `pytest` to `dev-requirements.txt` and install it.
+3.  **Create smoke test file**: Create a new file named `tests/smoke_test.py`.
+4.  **Implement smoke test**: Inside `tests/smoke_test.py`, write a simple test that executes the proof-of-concept script (e.g., by importing and calling its main function or using `subprocess`) and asserts that it runs without raising an exception or returns a successful exit code.
+5.  **Update Makefile**: Add a `test` target to the `Makefile` that executes `pytest`.
+6.  **Update docker-compose.ci.yml**: Ensure the `reposter` service's command is `make test`.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -121,7 +105,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 3  | **PoC Script Execution & Verification** — Manually run the script to confirm it works end-to-end | done |
 | 4  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | done |
 | 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | done |
-| 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | pending |
+| 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | done |
 | 7  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | pending |
 | 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | pending |
 | 9  | **File-driven repost logic** — read source URLs, repost, and write destination URLs | pending |
@@ -140,6 +124,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 - Updated `README.md` with Docker and Docker Compose instructions.
 - Created `Makefile` and removed linting/formatting targets as requested.
 - User confirmed `make help` works correctly.
+- Set up GitHub Actions CI to run tests and Docker build.
 <!-- AI appends detailed reasoning, tool output, and errors here -->
 
 ## Workflow History
