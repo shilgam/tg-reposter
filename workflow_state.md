@@ -2,17 +2,23 @@
 _Last updated: 2025-06-22_
 
 ## State
-Phase: BLUEPRINT
-Status: NEEDS_PLAN_APPROVAL
-CurrentItem: 1
+Phase: CONSTRUCT
+Status: RUNNING
+CurrentItem: 2
 
 ## Plan
-1.  **Pin Python Version:** Create a `.tool-versions` file to enforce Python 3.12.
-2.  **Initialize Virtual Environment:** Create a Python virtual environment in `./.venv`.
-3.  **Install Dependencies:** Activate the virtual environment and install `telethon`, `python-dotenv`, and developer dependencies (`ruff`, `isort`, `pytest`) using `pip`.
-4.  **Capture Dependencies:** Generate a `requirements.txt` and a `dev-requirements.txt` file.
-5.  **Configure Git Ignore:** Add `.venv/`, `*.session`, and `.env` to a `.gitignore` file.
-6.  **Update State:** Set item 1 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 2`.
+1.  **Create main script file**: Create `src/main.py`.
+2.  **Add imports**: Import `asyncio`, `os`, `Telethon`, and `load_dotenv`.
+3.  **Load environment variables**: Load `API_ID`, `API_HASH`, `SOURCE_CHANNEL_ID`, and `DESTINATION_CHANNEL_ID` from a `.env` file.
+4.  **Implement main logic**:
+    *   Create an `async` function `main`.
+    *   Inside `main`, create a `TelegramClient` instance.
+    *   Use `client.start()`.
+    *   Fetch the last message from the source channel.
+    *   Send the message text to the destination channel.
+5.  **Add entrypoint**: Add `if __name__ == "__main__":` to run the `main` function.
+6.  **Create `.env.example`**: Create an example environment file.
+7.  **Update State**: Set item 2 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 3`.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -100,7 +106,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 ## Items
 | id | description | status |
 |----|-------------|--------|
-| 1  | **Environment & deps** — Pin Python ≥3.12, set up `pip` and `venv`, add `telethon`. Use an `asdf` config file if desired | pending |
+| 1  | **Environment & deps** — Pin Python ≥3.12, set up `pip` and `venv`, add `telethon`. Use an `asdf` config file if desired | done |
 | 2  | **Proof-of-Concept script** — hard-code IDs, resend 1 text message end-to-end | pending |
 | 3  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | pending |
 | 4  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | pending |
@@ -115,6 +121,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 13 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
 
 ## Log
+- User approved plan. Starting item 2: Proof-of-Concept script.
 <!-- AI appends detailed reasoning, tool output, and errors here -->
 
 ## Workflow History
