@@ -2,12 +2,17 @@
 _Last updated: 2025-06-22_
 
 ## State
-Phase: ANALYZE
-Status: READY
+Phase: BLUEPRINT
+Status: NEEDS_PLAN_APPROVAL
 CurrentItem: 1
 
 ## Plan
-<!-- The AI fills this in during the BLUEPRINT phase -->
+1.  **Pin Python Version:** Create a `.tool-versions` file to enforce Python 3.12.
+2.  **Initialize Virtual Environment:** Create a Python virtual environment in `./.venv`.
+3.  **Install Dependencies:** Activate the virtual environment and install `telethon`, `python-dotenv`, and developer dependencies (`ruff`, `isort`, `pytest`) using `pip`.
+4.  **Capture Dependencies:** Generate a `requirements.txt` and a `dev-requirements.txt` file.
+5.  **Configure Git Ignore:** Add `.venv/`, `*.session`, and `.env` to a `.gitignore` file.
+6.  **Update State:** Set item 1 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 2`.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
