@@ -1,6 +1,6 @@
 # tg-reposter
 
-A simple Telegram bot to automatically repost messages from a source channel to a destination channel.
+A simple Telegram automation script to automatically repost messages from a source channel to a destination channel using your user account.
 
 ## Setup
 
@@ -51,12 +51,12 @@ A simple Telegram bot to automatically repost messages from a source channel to 
 
 ---
 
-## Docker Compose (Recommended)
+## Usage
 
 ### Start the service
 
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 
 - This will build the image if needed, start the container, and automatically reload code changes in `src/` and persist the session file.

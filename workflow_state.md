@@ -4,25 +4,25 @@ _Last updated: 2025-06-22_
 ## State
 Phase: CONSTRUCT
 Status: RUNNING
-CurrentItem: 4
+CurrentItem: 5
 
 ## Plan
-1.  **Create `Dockerfile`**:
-    *   Use `python:3.12-alpine` as the base image, set workdir, create a non-root user, copy files, and set the entrypoint.
-2.  **Verify `Dockerfile`**:
-    *   Instruct the user to run `docker build -t tg-reposter .` to confirm the image builds successfully.
-3.  **Create `.dockerignore`**:
-    *   Add `venv/`, `.env`, `__pycache__/`, and `*.pyc`.
-4.  **Create `docker-compose.yml`**:
-    *   Define a `reposter` service using the `Dockerfile`.
-    *   Configure `env_file` and volumes for live-reloading (`./src` and `anon.session`).
-5.  **Verify `docker-compose.yml`**:
-    *   Instruct the user to run `docker-compose up`.
-    *   Ask the user to confirm the container starts and the script runs as expected.
-    *   Ask the user to test the live-reload functionality by modifying `src/main.py` and observing the changes without a restart.
-6.  **Update `README.md`**:
-    *   Add detailed instructions for building and running the application using both Docker and Docker Compose.
-7.  **Update State**: Set item 4 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 5`.
+1.  **Create `Makefile`**:
+    *   Add a `.PHONY` rule for all targets.
+    *   Create a `help` target to list and describe all commands.
+2.  **Add Development Targets**:
+    *   `install`: Install dependencies from `requirements.txt` and `dev-requirements.txt`.
+    *   `test`: Run `pytest`.
+3.  **Add Docker Targets**:
+    *   `build`: Build the Docker image using `docker build`.
+    *   `up`: Start the services using `docker-compose up --build -d`.
+    *   `down`: Stop the services using `docker-compose down`.
+    *   `logs`: View container logs using `docker-compose logs -f`.
+4.  **Add Application CLI Placeholders**:
+    *   Create empty placeholder targets for `login`, `repost`, `delete`, and `sync`. These will be implemented in a later task.
+5.  **Verify `Makefile`**:
+    *   Instruct the user to run `make help` to confirm it works.
+6.  **Update State**: Set item 5 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 6`.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -113,7 +113,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 1  | **Environment & deps** — Pin Python ≥3.12, set up `pip` and `venv`, add `telethon`. Use an `asdf` config file if desired | done |
 | 2  | **Proof-of-Concept script** — hard-code IDs, resend 1 text message end-to-end | done |
 | 3  | **PoC Script Execution & Verification** — Manually run the script to confirm it works end-to-end | done |
-| 4  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | pending |
+| 4  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | done |
 | 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | pending |
 | 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | pending |
 | 7  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | pending |
@@ -130,7 +130,8 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 - User confirmed `Dockerfile` build was successful and script ran.
 - Created `.dockerignore`.
 - Created `docker-compose.yml`.
-- Awaiting user to verify `docker-compose up` and live-reloading.
+- User confirmed `docker-compose up` and live-reloading.
+- Updated `README.md` with Docker and Docker Compose instructions.
 <!-- AI appends detailed reasoning, tool output, and errors here -->
 
 ## Workflow History
