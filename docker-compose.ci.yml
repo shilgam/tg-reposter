@@ -1,0 +1,6 @@
+services:
+  reposter:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    command: make test

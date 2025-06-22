@@ -4,25 +4,31 @@ _Last updated: 2025-06-22_
 ## State
 Phase: CONSTRUCT
 Status: RUNNING
-CurrentItem: 5
+CurrentItem: 6
 
 ## Plan
-1.  **Create `Makefile`**:
-    *   Add a `.PHONY` rule for all targets.
-    *   Create a `help` target to list and describe all commands.
-2.  **Add Development Targets**:
-    *   `install`: Install dependencies from `requirements.txt` and `dev-requirements.txt`.
-    *   `test`: Run `pytest`.
-3.  **Add Docker Targets**:
-    *   `build`: Build the Docker image using `docker build`.
-    *   `up`: Start the services using `docker-compose up --build -d`.
-    *   `down`: Stop the services using `docker-compose down`.
-    *   `logs`: View container logs using `docker-compose logs -f`.
-4.  **Add Application CLI Placeholders**:
-    *   Create empty placeholder targets for `login`, `repost`, `delete`, and `sync`. These will be implemented in a later task.
-5.  **Verify `Makefile`**:
-    *   Instruct the user to run `make help` to confirm it works.
-6.  **Update State**: Set item 5 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 6`.
+1.  **Create Workflow Directory**:
+    *   Create the `.github/workflows` directory if it doesn't exist.
+2.  **Create CI Docker Compose File**:
+    *   Create a new file named `docker-compose.ci.yml`.
+    *   Define a `reposter` service that builds the Docker image.
+    *   Override the service's command to execute `make test`. This ensures tests run inside the container.
+3.  **Create CI Workflow File**:
+    *   Create a new file named `.github/workflows/ci.yml`.
+4.  **Define Workflow Triggers**:
+    *   Configure the workflow to run on all `push` events and all `pull_request` events.
+5.  **Define CI Job**:
+    *   Create a single job named `ci`.
+    *   Specify the runner as `ubuntu-latest`.
+6.  **Define Job Steps**:
+    *   Use `actions/checkout@v4` to check out the repository code.
+    *   Add a step to run the tests using Docker Compose:
+        *   Command: `docker-compose -f docker-compose.ci.yml up --build --abort-on-container-exit --exit-code-from reposter`
+        *   This command builds the image and runs the test container. The workflow will fail if the tests fail.
+7.  **Verify Workflow**:
+    *   Instruct the user to commit and push the new files (`.github/workflows/ci.yml` and `docker-compose.ci.yml`).
+    *   Ask the user to confirm that the workflow triggers and succeeds on GitHub.
+8.  **Update State**: Set item 6 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 7`.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -114,7 +120,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 2  | **Proof-of-Concept script** — hard-code IDs, resend 1 text message end-to-end | done |
 | 3  | **PoC Script Execution & Verification** — Manually run the script to confirm it works end-to-end | done |
 | 4  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | done |
-| 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | pending |
+| 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | done |
 | 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | pending |
 | 7  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | pending |
 | 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | pending |
@@ -132,6 +138,8 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 - Created `docker-compose.yml`.
 - User confirmed `docker-compose up` and live-reloading.
 - Updated `README.md` with Docker and Docker Compose instructions.
+- Created `Makefile` and removed linting/formatting targets as requested.
+- User confirmed `make help` works correctly.
 <!-- AI appends detailed reasoning, tool output, and errors here -->
 
 ## Workflow History

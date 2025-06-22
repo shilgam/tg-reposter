@@ -1,0 +1,29 @@
+# Use a slim Python base image
+FROM python:3.12-alpine
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Install make
+RUN apk add --no-cache make
+
+# Copy project files
+COPY Makefile .
+COPY requirements.txt .
+COPY dev-requirements.txt .
+RUN make install
+
+# Copy the application source code
+COPY src ./src
+
+# Change ownership of the app directory
+RUN chown -R appuser:appgroup /app
+
+# Switch to the non-root user
+USER appuser
+
+# Set the command to run the application
+CMD ["python", "-u", "src/main.py"]
