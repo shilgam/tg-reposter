@@ -2,9 +2,9 @@
 _Last updated: 2025-06-22_
 
 ## State
-Phase: CONSTRUCT
-Status: RUNNING
-CurrentItem: null
+Phase: ANALYZE
+Status: READY
+CurrentItem: 1
 
 ## Plan
 <!-- The AI fills this in during the BLUEPRINT phase -->
@@ -95,6 +95,19 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 ## Items
 | id | description | status |
 |----|-------------|--------|
+| 1  | **Environment & deps** — Pin Python ≥3.12, set up `pip` and `venv`, add `telethon`. Use an `asdf` config file if desired | pending |
+| 2  | **Proof-of-Concept script** — hard-code IDs, resend 1 text message end-to-end | pending |
+| 3  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | pending |
+| 4  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | pending |
+| 5  | **GitHub Actions CI** — set up CI to run tests, and Docker build | pending |
+| 6  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | pending |
+| 7  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | pending |
+| 8  | **File-driven repost logic** — read source URLs, repost, and write destination URLs | pending |
+| 9  | **Delete & sync commands** — implement `delete` and `sync` commands per `_CONTEXT.md` | pending |
+| 10 | **Robust logging & error handling** — add logging and exit on first error | pending |
+| 11 | **Comprehensive unit tests** — add unit tests with mocked Telethon, aim for 90% coverage | pending |
+| 12 | **Documentation pass** — expand `README.md` with usage instructions and badges | pending |
+| 13 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
 
 ## Log
 <!-- AI appends detailed reasoning, tool output, and errors here -->
