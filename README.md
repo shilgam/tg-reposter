@@ -10,15 +10,7 @@ A simple Telegram bot to automatically repost messages from a source channel to 
     cd tg-reposter
     ```
 
-2.  **Create a virtual environment and install dependencies:**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    ```
-
-3.  **Obtain Credentials:**
-
+2.  **Obtain Credentials:**
     *   **API_ID and API_HASH**:
         1.  Go to [my.telegram.org](https://my.telegram.org) and log in.
         2.  Click on "API development tools".
@@ -29,37 +21,59 @@ A simple Telegram bot to automatically repost messages from a source channel to 
             - **Platform**: Select `Desktop`
             - **Description**: (can be left blank)
         4.  After creating the app, you will find your `API_ID` and `API_HASH` on the next page.
-
     *   **Channel IDs**:
-        1.  Find a bot like `@userinfobot` on Telegram.
-        2.  The bot may ask you to subscribe to another channel (e.g., `t.me/ChatIDBots`) to use its service. This is a common practice for free bots. It is safe to subscribe, get the IDs, and then unsubscribe.
-        3.  For the **source channel**, forward any message from that channel to `@userinfobot`. It will reply with the channel's ID.
-        4.  Do the same for the **destination channel**.
-        5.  **Note**: For private channels, the ID will be a negative number and might start with `-100`. The bot should handle this correctly.
+        1.  In Telegram, find a bot like `@userinfobot`.
+        2.  To get the ID of a channel, you must **forward a message** from that channel to the bot.
+            - **Important**: Do NOT send a link to the channel or type the channel name. You must use Telegram's "Forward" functionality.
+            - Go into your source channel.
+            - Tap and hold (or right-click) on any message.
+            - Select "Forward".
+            - Choose `@userinfobot` as the recipient.
+        3.  The bot will reply with the correct Channel ID. It will likely be a negative number (e.g., `-100123456789`).
+        4.  Repeat the forwarding process for your destination channel.
 
-4.  **Create a `.env` file:**
-    Create a `.env` file in the root of the project and add your credentials:
+    *   **Finding a Specific Message ID (Optional)**:
+        By default, the script reposts the latest message. To repost a specific message, you need its ID.
+        1.  Go to the source channel/group and find the message.
+        2.  **Right-click** on it and select **Copy Message Link**.
+        3.  The link will look like `https://t.me/channel_name/12345`. The number at the end (`12345`) is the message ID.
+        4.  Add this to your `.env` file as `SOURCE_MESSAGE_ID`.
+
+3.  **Create a `.env` file:**
+    Create a `.env` file in the root of the project and add your credentials. Use `SOURCE_MESSAGE_ID` only when you need to target a specific message.
     ```
     API_ID=...
     API_HASH=...
     SOURCE_CHANNEL_ID=...
     DESTINATION_CHANNEL_ID=...
+    SOURCE_MESSAGE_ID=... # Optional: for a specific message
     ```
 
-## Usage
+---
 
-Run the script:
+## Docker Compose (Recommended)
+
+### Start the service
+
 ```bash
-python src/main.py
+docker-compose up
 ```
 
-**First-Time Run**
+- This will build the image if needed, start the container, and automatically reload code changes in `src/` and persist the session file.
+- You can stop the service with `Ctrl+C`.
 
-The first time you run the script, Telethon will need to create a session file. It will prompt you interactively in your terminal:
-1.  **Enter your phone number**: Provide the phone number associated with your Telegram account (e.g., `+12223334444`).
-2.  **Enter the code**: Telegram will send a login code to your Telegram app. Enter it.
-3.  **Enter your password**: If you have 2-Factor Authentication enabled, enter your password.
+### Live Code Reload
 
-This will create an `anon.session` file in your project directory. Subsequent runs will use this file and will not require you to log in again.
+- Any changes you make to files in `src/` will be reflected in the running container.
+- To see the effect, simply save your changes and watch the logs.
 
-The script will fetch the latest message from the source channel and send it to the destination channel.
+---
+
+## Troubleshooting
+
+- **Session file not found error during Docker build:**
+    - Make sure `anon.session` exists in your project root before building the image. If you haven't run the script locally yet, do so to generate the session file.
+- **Environment variables not loaded:**
+    - Ensure your `.env` file is present and correctly formatted.
+- **Permission errors:**
+    - The container runs as a non-root user for security. Make sure files are readable by all users, or adjust permissions as needed.

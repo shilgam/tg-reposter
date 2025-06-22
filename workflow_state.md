@@ -4,40 +4,25 @@ _Last updated: 2025-06-22_
 ## State
 Phase: CONSTRUCT
 Status: RUNNING
-CurrentItem: 3
+CurrentItem: 4
 
 ## Plan
-1.  **Create `requirements.txt`**: Create the file with `telethon` and `python-dotenv`.
-2.  **Update `README.md`**: Add detailed setup and usage instructions to the `README.md` file.
-3.  **Provide setup instructions**:
-    *   Explain how to get credentials:
-        *   **API_ID and API_HASH**:
-            1.  Go to [my.telegram.org](https://my.telegram.org) and log in.
-            2.  Click on "API development tools".
-            3.  You will be prompted to create a new application. Fill in the form as follows:
-                - **App title**: `tg-reposter`
-                - **Short name**: `tg_reposter` (or any other unique name)
-                - **URL**: (can be left blank)
-                - **Platform**: Select `Desktop`
-                - **Description**: (can be left blank)
-            4.  After creating the app, you will find your `API_ID` and `API_HASH` on the next page.
-        *   **Channel IDs**:
-            1.  Find a bot like `@userinfobot` on Telegram.
-            2.  The bot may ask you to subscribe to another channel (e.g., `t.me/ChatIDBots`) to use its service. This is a common practice for free bots. It is safe to subscribe, get the IDs, and then unsubscribe.
-            3.  For the **source channel**, forward any message from that channel to `@userinfobot`. It will reply with the channel's ID.
-            4.  Do the same for the **destination channel**.
-            5.  **Note**: For private channels, the ID will be a negative number and might start with `-100`. The bot should handle this correctly.
-    *   Inform the user to create a `.env` file with the obtained credentials:
-        ```
-        API_ID=...
-        API_HASH=...
-        SOURCE_CHANNEL_ID=...
-        DESTINATION_CHANNEL_ID=...
-        ```
-    *   Instruct the user to install dependencies via `pip install -r requirements.txt`.
-4.  **Provide run command**: Instruct the user to run `python src/main.py`.
-5.  **Request confirmation**: Ask the user to confirm that the message was forwarded successfully.
-6.  **Update State**: Set item 3 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 4`.
+1.  **Create `Dockerfile`**:
+    *   Use `python:3.12-alpine` as the base image, set workdir, create a non-root user, copy files, and set the entrypoint.
+2.  **Verify `Dockerfile`**:
+    *   Instruct the user to run `docker build -t tg-reposter .` to confirm the image builds successfully.
+3.  **Create `.dockerignore`**:
+    *   Add `venv/`, `.env`, `__pycache__/`, and `*.pyc`.
+4.  **Create `docker-compose.yml`**:
+    *   Define a `reposter` service using the `Dockerfile`.
+    *   Configure `env_file` and volumes for live-reloading (`./src` and `anon.session`).
+5.  **Verify `docker-compose.yml`**:
+    *   Instruct the user to run `docker-compose up`.
+    *   Ask the user to confirm the container starts and the script runs as expected.
+    *   Ask the user to test the live-reload functionality by modifying `src/main.py` and observing the changes without a restart.
+6.  **Update `README.md`**:
+    *   Add detailed instructions for building and running the application using both Docker and Docker Compose.
+7.  **Update State**: Set item 4 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 5`.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -127,7 +112,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 |----|-------------|--------|
 | 1  | **Environment & deps** — Pin Python ≥3.12, set up `pip` and `venv`, add `telethon`. Use an `asdf` config file if desired | done |
 | 2  | **Proof-of-Concept script** — hard-code IDs, resend 1 text message end-to-end | done |
-| 3  | **PoC Script Execution & Verification** — Manually run the script to confirm it works end-to-end | pending |
+| 3  | **PoC Script Execution & Verification** — Manually run the script to confirm it works end-to-end | done |
 | 4  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | pending |
 | 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | pending |
 | 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | pending |
@@ -141,9 +126,11 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 14 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
 
 ## Log
-- Created `requirements.txt`.
-- Updated `README.md` with setup and usage instructions.
-- Awaiting user to run the script and confirm success.
+- Created `Dockerfile`.
+- User confirmed `Dockerfile` build was successful and script ran.
+- Created `.dockerignore`.
+- Created `docker-compose.yml`.
+- Awaiting user to verify `docker-compose up` and live-reloading.
 <!-- AI appends detailed reasoning, tool output, and errors here -->
 
 ## Workflow History

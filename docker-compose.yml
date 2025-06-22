@@ -1,0 +1,8 @@
+services:
+  reposter:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./anon.session:/app/anon.session
