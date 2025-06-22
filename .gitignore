@@ -1,1 +1,4 @@
+.env
 .venv
+anon.session
+venv/

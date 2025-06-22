@@ -4,21 +4,40 @@ _Last updated: 2025-06-22_
 ## State
 Phase: CONSTRUCT
 Status: RUNNING
-CurrentItem: 2
+CurrentItem: 3
 
 ## Plan
-1.  **Create main script file**: Create `src/main.py`.
-2.  **Add imports**: Import `asyncio`, `os`, `Telethon`, and `load_dotenv`.
-3.  **Load environment variables**: Load `API_ID`, `API_HASH`, `SOURCE_CHANNEL_ID`, and `DESTINATION_CHANNEL_ID` from a `.env` file.
-4.  **Implement main logic**:
-    *   Create an `async` function `main`.
-    *   Inside `main`, create a `TelegramClient` instance.
-    *   Use `client.start()`.
-    *   Fetch the last message from the source channel.
-    *   Send the message text to the destination channel.
-5.  **Add entrypoint**: Add `if __name__ == "__main__":` to run the `main` function.
-6.  **Create `.env.example`**: Create an example environment file.
-7.  **Update State**: Set item 2 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 3`.
+1.  **Create `requirements.txt`**: Create the file with `telethon` and `python-dotenv`.
+2.  **Update `README.md`**: Add detailed setup and usage instructions to the `README.md` file.
+3.  **Provide setup instructions**:
+    *   Explain how to get credentials:
+        *   **API_ID and API_HASH**:
+            1.  Go to [my.telegram.org](https://my.telegram.org) and log in.
+            2.  Click on "API development tools".
+            3.  You will be prompted to create a new application. Fill in the form as follows:
+                - **App title**: `tg-reposter`
+                - **Short name**: `tg_reposter` (or any other unique name)
+                - **URL**: (can be left blank)
+                - **Platform**: Select `Desktop`
+                - **Description**: (can be left blank)
+            4.  After creating the app, you will find your `API_ID` and `API_HASH` on the next page.
+        *   **Channel IDs**:
+            1.  Find a bot like `@userinfobot` on Telegram.
+            2.  The bot may ask you to subscribe to another channel (e.g., `t.me/ChatIDBots`) to use its service. This is a common practice for free bots. It is safe to subscribe, get the IDs, and then unsubscribe.
+            3.  For the **source channel**, forward any message from that channel to `@userinfobot`. It will reply with the channel's ID.
+            4.  Do the same for the **destination channel**.
+            5.  **Note**: For private channels, the ID will be a negative number and might start with `-100`. The bot should handle this correctly.
+    *   Inform the user to create a `.env` file with the obtained credentials:
+        ```
+        API_ID=...
+        API_HASH=...
+        SOURCE_CHANNEL_ID=...
+        DESTINATION_CHANNEL_ID=...
+        ```
+    *   Instruct the user to install dependencies via `pip install -r requirements.txt`.
+4.  **Provide run command**: Instruct the user to run `python src/main.py`.
+5.  **Request confirmation**: Ask the user to confirm that the message was forwarded successfully.
+6.  **Update State**: Set item 3 status to `done`, `Phase = CONSTRUCT`, `Status = READY`, `CurrentItem = 4`.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -107,21 +126,24 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | id | description | status |
 |----|-------------|--------|
 | 1  | **Environment & deps** — Pin Python ≥3.12, set up `pip` and `venv`, add `telethon`. Use an `asdf` config file if desired | done |
-| 2  | **Proof-of-Concept script** — hard-code IDs, resend 1 text message end-to-end | pending |
-| 3  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | pending |
-| 4  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | pending |
-| 5  | **GitHub Actions CI** — set up CI to run tests, and Docker build | pending |
-| 6  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | pending |
-| 7  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | pending |
-| 8  | **File-driven repost logic** — read source URLs, repost, and write destination URLs | pending |
-| 9  | **Delete & sync commands** — implement `delete` and `sync` commands per `_CONTEXT.md` | pending |
-| 10 | **Robust logging & error handling** — add logging and exit on first error | pending |
-| 11 | **Comprehensive unit tests** — add unit tests with mocked Telethon, aim for 90% coverage | pending |
-| 12 | **Documentation pass** — expand `README.md` with usage instructions and badges | pending |
-| 13 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
+| 2  | **Proof-of-Concept script** — hard-code IDs, resend 1 text message end-to-end | done |
+| 3  | **PoC Script Execution & Verification** — Manually run the script to confirm it works end-to-end | pending |
+| 4  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | pending |
+| 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | pending |
+| 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | pending |
+| 7  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | pending |
+| 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | pending |
+| 9  | **File-driven repost logic** — read source URLs, repost, and write destination URLs | pending |
+| 10 | **Delete & sync commands** — implement `delete` and `sync` commands per `_CONTEXT.md` | pending |
+| 11 | **Robust logging & error handling** — add logging and exit on first error | pending |
+| 12 | **Comprehensive unit tests** — add unit tests with mocked Telethon, aim for 90% coverage | pending |
+| 13 | **Documentation pass** — expand `README.md` with usage instructions and badges | pending |
+| 14 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
 
 ## Log
-- User approved plan. Starting item 2: Proof-of-Concept script.
+- Created `requirements.txt`.
+- Updated `README.md` with setup and usage instructions.
+- Awaiting user to run the script and confirm success.
 <!-- AI appends detailed reasoning, tool output, and errors here -->
 
 ## Workflow History
