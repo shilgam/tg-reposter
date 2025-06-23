@@ -2,17 +2,21 @@
 _Last updated: 2025-06-22_
 
 ## State
-Phase: VALIDATE
-Status: RUNNING
-CurrentItem: 7
+Phase: BLUEPRINT
+Status: NEEDS_PLAN_APPROVAL
+CurrentItem: 8
 
 ## Plan
-1.  **Create test directory**: Create the `tests/` directory if it doesn't exist.
-2.  **Install pytest**: Add `pytest` to `dev-requirements.txt` and install it.
-3.  **Create smoke test file**: Create a new file named `tests/smoke_test.py`.
-4.  **Implement smoke test**: Inside `tests/smoke_test.py`, write a simple test that executes the proof-of-concept script (e.g., by importing and calling its main function or using `subprocess`) and asserts that it runs without raising an exception or returns a successful exit code.
-5.  **Update Makefile**: Add a `test` target to the `Makefile` that executes `pytest`.
-6.  **Update docker-compose.ci.yml**: Ensure the `reposter` service's command is `make test`.
+1.  **Add `click` dependency**: Add `click` to `requirements.txt`.
+2.  **Create `src/cli.py`**: Create a new file `src/cli.py` to house the `click` command-line interface.
+3.  **Implement `cli` group**: In `src/cli.py`, create a `click` group to serve as the main entry point for the commands.
+4.  **Refactor `main` into `repost_message`**: Move the core logic from `src/main.py` into a function `repost_message(source, message_id, destination)` in a new `src/reposter.py` file. This function will handle the Telethon client and message reposting.
+5.  **Implement `repost` command**: In `src/cli.py`, create a `repost` command that takes `--source`, `--message-id`, and `--destination` as options and calls the `repost_message` function.
+6.  **Create placeholder `delete` and `sync` commands**: In `src/cli.py`, add empty functions for the `delete` and `sync` commands, decorated with `@cli.command()`, so they appear in the help menu.
+7.  **Update `main.py` to run the CLI**: Modify `src/main.py` to import and execute the `click` group from `src/cli.py`.
+8.  **Update `Makefile`**: Add a `run` target to the `Makefile` that executes the CLI, e.g., `python -m src.main`.
+9.  **Update `README.md`**: Add a section to `README.md` explaining how to use the new CLI commands.
+10. **Request manual validation**: Ask user to follow the new `README.md` instructions and confirm the CLI commands work as expected.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -106,7 +110,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 4  | **Dockerization** — create a slim Alpine `Dockerfile` with an entrypoint | done |
 | 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | done |
 | 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | done |
-| 7  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | pending |
+| 7  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | done |
 | 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | pending |
 | 9  | **File-driven repost logic** — read source URLs, repost, and write destination URLs | pending |
 | 10 | **Delete & sync commands** — implement `delete` and `sync` commands per `_CONTEXT.md` | pending |
@@ -116,15 +120,6 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 14 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
 
 ## Log
-- Created `Dockerfile`.
-- User confirmed `Dockerfile` build was successful and script ran.
-- Created `.dockerignore`.
-- Created `docker-compose.yml`.
-- User confirmed `docker-compose up` and live-reloading.
-- Updated `README.md` with Docker and Docker Compose instructions.
-- Created `Makefile` and removed linting/formatting targets as requested.
-- User confirmed `make help` works correctly.
-- Set up GitHub Actions CI to run tests and Docker build.
 <!-- AI appends detailed reasoning, tool output, and errors here -->
 
 ## Workflow History

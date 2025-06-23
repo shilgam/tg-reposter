@@ -38,10 +38,10 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 ## Constraints
 
-- **Rate limits**: respect Telegram’s `FloodWait`; default 2 s delay between sends (configurable).
+- **Rate limits**: respect Telegram's `FloodWait`; default 2 s delay between sends (configurable).
 - **Data integrity**: stop immediately on first failure; never leave partial state.
 - **Security**: keep `*.session` files out of VCS; redact PII in logs.
-- **Compliance**: accommodate channel owners’ privacy requirement of stripping original metadata.
+- **Compliance**: accommodate channel owners' privacy requirement of stripping original metadata.
 - **No Bot API** – tool must authenticate with a **user session**, never a bot token.
 
 ## Tokenization Settings
@@ -53,4 +53,6 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Set up GitHub Actions CI to run tests and Docker build.
+- Implemented a containerized smoke test with pytest to ensure basic application integrity.
 <!-- The agent prepends the latest summary here as a new list item after each VALIDATE phase -->
