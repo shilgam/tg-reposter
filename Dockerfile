@@ -22,4 +22,4 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 # Set the command to run the application
-CMD ["python", "-u", "src/main.py"]
+CMD ["python", "-m", "src.main"]

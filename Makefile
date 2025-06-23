@@ -1,6 +1,6 @@
 # Makefile for tg-reposter
 
-.PHONY: help install test build up down logs login repost delete sync
+.PHONY: help install test login repost delete sync
 
 help:
 	@echo "Usage: make [target]"
@@ -17,30 +17,15 @@ test: ## Run tests using pytest.
 	@echo "Running tests..."
 	pytest
 
-build: ## Build the Docker image.
-	@echo "Building Docker image..."
-	docker build -t tg-reposter .
+login: ## Creates a new session file by logging in.
+	@touch anon.session
+	@docker-compose run --rm reposter python -m src.main login
 
-up: ## Start the application using Docker Compose.
-	@echo "Starting application with Docker Compose..."
-	docker-compose up --build -d
+repost: ## Reposts a message. Pass CLI arguments via the ARGS variable.
+	@docker-compose run --rm reposter python -m src.main repost $(ARGS)
 
-down: ## Stop the application using Docker Compose.
-	@echo "Stopping application with Docker Compose..."
-	docker-compose down
+delete: ## Deletes messages. Pass CLI arguments via the ARGS variable.
+	@docker-compose run --rm reposter python -m src.main delete $(ARGS)
 
-logs: ## View application logs.
-	@echo "Tailing application logs..."
-	docker-compose logs -f
-
-login: ## (Placeholder) Run the login flow.
-	@echo "login command not yet implemented."
-
-repost: ## (Placeholder) Run the repost command.
-	@echo "repost command not yet implemented."
-
-delete: ## (Placeholder) Run the delete command.
-	@echo "delete command not yet implemented."
-
-sync: ## (Placeholder) Run the sync command.
-	@echo "sync command not yet implemented."
+sync: ## Syncs messages. Pass CLI arguments via the ARGS variable.
+	@docker-compose run --rm reposter python -m src.main sync $(ARGS)

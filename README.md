@@ -40,7 +40,7 @@ A simple Telegram automation script to automatically repost messages from a sour
         4.  Add this to your `.env` file as `SOURCE_MESSAGE_ID`.
 
 3.  **Create a `.env` file:**
-    Create a `.env` file in the root of the project and add your credentials. Use `SOURCE_MESSAGE_ID` only when you need to target a specific message.
+    Create a `.env` file in the root of the project and add your credentials.
     ```
     API_ID=...
     API_HASH=...
@@ -49,31 +49,48 @@ A simple Telegram automation script to automatically repost messages from a sour
     SOURCE_MESSAGE_ID=... # Optional: for a specific message
     ```
 
+4.  **Log in to create a session file:**
+    Run the following command. You will be prompted for your phone number, password, and a 2FA code. This creates the `anon.session` file needed to run commands.
+    ```bash
+    make login
+    ```
+
 ---
 
 ## Usage
 
-### Start the service
+All commands are run via `make` and executed within a Docker container to ensure a consistent environment.
+
+### Reposting a Message
+
+To repost a message, use the `make repost` command and pass the required arguments inside an `ARGS` variable.
+
+**Arguments:**
+
+*   `--source`: The source channel ID or username.
+*   `--message-id`: The ID of the message to repost.
+*   `--destination`: The destination channel ID or username.
+
+**Example:**
 
 ```bash
-docker-compose up --build
+make repost ARGS="--source -1001234567 --message-id 123 --destination -1007654321"
 ```
 
-- This will build the image if needed, start the container, and automatically reload code changes in `src/` and persist the session file.
-- You can stop the service with `Ctrl+C`.
+### Other Commands
 
-### Live Code Reload
-
-- Any changes you make to files in `src/` will be reflected in the running container.
-- To see the effect, simply save your changes and watch the logs.
+*   `make delete ARGS="..."`: Deletes messages. (Not yet implemented)
+*   `make sync ARGS="..."`: Syncs messages. (Not yet implemented)
 
 ---
 
 ## Troubleshooting
 
-- **Session file not found error during Docker build:**
-    - Make sure `anon.session` exists in your project root before building the image. If you haven't run the script locally yet, do so to generate the session file.
+- **`make login` fails with a "not a directory" error:**
+    - This can happen if a previous command failed and left behind an `anon.session` directory. Run `rm -rf anon.session` to remove it, then try `make login` again.
+- **Session file not found error:**
+    - Make sure you have run `make login` at least once to create the `anon.session` file.
 - **Environment variables not loaded:**
-    - Ensure your `.env` file is present and correctly formatted.
-- **Permission errors:**
-    - The container runs as a non-root user for security. Make sure files are readable by all users, or adjust permissions as needed.
+    - Ensure your `.env` file is present in the project root and correctly formatted.
+
+## Contributing
