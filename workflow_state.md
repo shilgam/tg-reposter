@@ -2,21 +2,23 @@
 _Last updated: 2025-06-22_
 
 ## State
-Phase: CONSTRUCT
-Status: RUNNING
-CurrentItem: 8
+Phase: VALIDATE
+Status: READY
+CurrentItem: 9
 
 ## Plan
-1.  **Add `click` dependency**: Add `click` to `requirements.txt`.
-2.  **Create `src/cli.py`**: Create a new file `src/cli.py` to house the `click` command-line interface.
-3.  **Implement `cli` group**: In `src/cli.py`, create a `click` group to serve as the main entry point for the commands.
-4.  **Refactor `main` into `repost_message`**: Move the core logic from `src/main.py` into a function `repost_message(source, message_id, destination)` in a new `src/reposter.py` file. This function will handle the Telethon client and message reposting.
-5.  **Implement `repost` command**: In `src/cli.py`, create a `repost` command that takes `--source`, `--message-id`, and `--destination` as options and calls the `repost_message` function.
-6.  **Create placeholder `delete` and `sync` commands**: In `src/cli.py`, add empty functions for the `delete` and `sync` commands, decorated with `@cli.command()`, so they appear in the help menu.
-7.  **Update `main.py` to run the CLI**: Modify `src/main.py` to import and execute the `click` group from `src/cli.py`.
-8.  **Update `Makefile`**: Add a `run` target to the `Makefile` that executes the CLI, e.g., `python -m src.main`.
-9.  **Update `README.md`**: Add a section to `README.md` explaining how to use the new CLI commands.
-10. **Request manual validation**: Ask user to follow the new `README.md` instructions and confirm the CLI commands work as expected.
+1.  **Create `temp` directories**: Add a `make setup` command to create the `./temp/input` and `./temp/output` directories if they don't exist.
+2.  **Modify `repost` command**: Update the `repost` command in `src/cli.py`. It should no longer take `--source` and `--message-id` as arguments. It will now take a single `--destination` argument, which is required.
+3.  **Implement file reading**: In `src/reposter.py`, rename `repost_message` to `repost_from_file`. This function will now:
+    a. Read a list of source message URLs from `./temp/input/source_urls.txt`.
+    b. Use the destination channel provided via the `--destination` flag.
+4.  **Implement URL parsing**: Add a helper function to parse Telegram message URLs (`https://t.me/channel_name/12345`) to extract the channel name and message ID.
+5.  **Loop and repost**: In `repost_from_file`, loop through each source URL, parse it, and call the core Telethon `send_message` logic for each one.
+6.  **Implement atomic file writing**: After each successful repost, get the new message's URL and append it to a temporary file.
+7.  **Finalize output file**: Once the loop is complete, atomically rename the temporary file to `./temp/output/new_dest_urls.txt`.
+8.  **Update `Makefile`**: Change the `repost` target in the `Makefile` to reflect the new CLI structure. The `ARGS` variable will now pass the `--destination` flag.
+9.  **Update `README.md`**: Update the documentation to explain the new file-based workflow: how to create `source_urls.txt`, how to run the new `repost` command, and what to expect in `new_dest_urls.txt`.
+10. **Manual validation**: Request user to confirm the new workflow.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**

@@ -61,36 +61,36 @@ A simple Telegram automation script to automatically repost messages from a sour
 
 All commands are run via `make` and executed within a Docker container to ensure a consistent environment.
 
-### Reposting a Message
+### File-based Reposting Workflow
 
-To repost a message, use the `make repost` command and pass the required arguments inside an `ARGS` variable.
+To repost multiple messages, use the new file-based workflow:
 
-**Arguments:**
+**Before you start:**
+- Run `make setup` to create the required temp directories.
 
-*   `--source`: The source channel ID or username.
-*   `--message-id`: The ID of the message to repost.
-*   `--destination`: The destination channel ID or username.
+1. **Prepare your source URLs file:**
+   - Create a file at `./temp/input/source_urls.txt` (one message URL per line).
+   - Each line should be a full Telegram message URL, e.g.:
+     ```
+     https://t.me/source_channel/12345
+     https://t.me/source_channel/12346
+     ```
 
-**Example:**
+2. **Run the repost command:**
+   - Use the Makefile target and specify your destination channel:
+     ```bash
+     make repost ARGS="--destination=<destination_channel>"
+     ```
+   - Example:
+     ```bash
+     make repost ARGS="--destination=my_dest_channel"
+     ```
 
-```bash
-make repost ARGS="--source -1001234567 --message-id 123 --destination -1007654321"
-```
+3. **Check the output:**
+   - After completion, new message URLs will be written to:
+     `./temp/output/new_dest_urls.txt`
+   - Each line corresponds to a reposted message in the destination channel.
 
 ### Other Commands
 
 *   `make delete ARGS="..."`: Deletes messages. (Not yet implemented)
-*   `make sync ARGS="..."`: Syncs messages. (Not yet implemented)
-
----
-
-## Troubleshooting
-
-- **`make login` fails with a "not a directory" error:**
-    - This can happen if a previous command failed and left behind an `anon.session` directory. Run `rm -rf anon.session` to remove it, then try `make login` again.
-- **Session file not found error:**
-    - Make sure you have run `make login` at least once to create the `anon.session` file.
-- **Environment variables not loaded:**
-    - Ensure your `.env` file is present in the project root and correctly formatted.
-
-## Contributing

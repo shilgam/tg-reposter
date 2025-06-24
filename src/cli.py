@@ -2,7 +2,7 @@ import asyncio
 
 import click
 
-from .reposter import login as perform_login, repost_message
+from .reposter import login as perform_login, repost_from_file
 
 
 @click.group()
@@ -12,13 +12,11 @@ def cli():
 
 
 @cli.command()
-@click.option("--source", required=True, help="Source channel ID or username.")
-@click.option("--message-id", required=True, type=int, help="The ID of the message to repost.")
 @click.option("--destination", required=True, help="Destination channel ID or username.")
-def repost(source, message_id, destination):
-    """Reposts a single message from a source to a destination."""
-    click.echo(f"Reposting message {message_id} from {source} to {destination}...")
-    asyncio.run(repost_message(source, message_id, destination))
+def repost(destination):
+    """Reposts messages from file to the specified destination."""
+    click.echo(f"Reposting messages to {destination}...")
+    asyncio.run(repost_from_file(destination))
     click.echo("Repost command finished.")
 
 

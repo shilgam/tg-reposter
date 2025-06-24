@@ -1,10 +1,30 @@
 import os
+import re
 
 from telethon import TelegramClient
 
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 
+# Helper to parse Telegram message URLs
+def parse_telegram_url(url):
+    """Parses a Telegram message URL and returns (channel_name_or_id, message_id) or (None, None) if invalid."""
+    # Match /t.me/channel_name/message_id
+    m1 = re.match(r'https?://t\.me/([\w\-]+)/([0-9]+)', url)
+    if m1 and m1.group(1) != 'c':
+        return m1.group(1), int(m1.group(2))
+    # Match /t.me/c/channel_id/message_id
+    m2 = re.match(r'https?://t\.me/c/(\d+)/([0-9]+)', url)
+    if m2:
+        # /c/ IDs are missing the -100 prefix
+        return f'-100{m2.group(1)}', int(m2.group(2))
+    return None, None
+
+def normalize_channel_id(channel):
+    """If channel is all digits and doesn't start with -100, prepend -100."""
+    if isinstance(channel, str) and channel.isdigit() and not channel.startswith('-100'):
+        return f'-100{channel}'
+    return channel
 
 async def login():
     """Connects to Telegram and creates a session file if one doesn't exist."""
@@ -20,37 +40,52 @@ async def login():
             print("Login successful. Session file created/updated.")
 
 
-async def repost_message(source, message_id, destination):
-    """Fetches a specific message from a source channel and reposts it to a destination channel."""
+async def repost_from_file(destination):
+    """Reads source message URLs from file and reposts them to the destination channel. Writes new message URLs to output file atomically."""
     session_name = "anon"
+    input_file = "./temp/input/source_urls.txt"
+    output_dir = "./temp/output"
+    output_file = os.path.join(output_dir, "new_dest_urls.txt")
+    temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
 
-    try:
-        source_id = int(source)
-    except (ValueError, TypeError):
-        source_id = source
+    if not os.path.exists(input_file):
+        print(f"Input file {input_file} does not exist.")
+        return
 
-    try:
-        destination_id = int(destination)
-    except (ValueError, TypeError):
-        destination_id = destination
+    os.makedirs(output_dir, exist_ok=True)
+
+    with open(input_file, "r", encoding="utf-8") as f:
+        source_urls = [line.strip() for line in f if line.strip()]
+
+    print(f"Read {len(source_urls)} source URLs from {input_file}.")
 
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         try:
+            destination_id = normalize_channel_id(destination)
             dest_entity = await client.get_entity(destination_id)
         except Exception as e:
             print(f"Could not find the destination entity '{destination}'. Error: {e}")
             return
 
-        try:
-            # Telethon uses integer IDs for messages
-            msg_id = int(message_id)
-            message_to_send = await client.get_messages(source_id, ids=msg_id)
-        except Exception as e:
-            print(f"Error fetching message with ID {message_id} from {source}. Error: {e}")
-            return
+        with open(temp_file, "w", encoding="utf-8") as out:
+            for url in source_urls:
+                channel, msg_id = parse_telegram_url(url)
+                if channel and msg_id:
+                    try:
+                        source_id = normalize_channel_id(channel)
+                        message_to_send = await client.get_messages(source_id, ids=msg_id)
+                        if message_to_send:
+                            sent = await client.send_message(dest_entity, message_to_send)
+                            # Construct new message URL
+                            new_url = f"https://t.me/{destination}/{sent.id}"
+                            out.write(new_url + "\n")
+                            print(f"Reposted message {msg_id} from {channel} to {destination} as {new_url}.")
+                        else:
+                            print(f"Could not find message with ID {msg_id} in {channel}.")
+                    except Exception as e:
+                        print(f"Error reposting message {msg_id} from {channel}: {e}")
+                else:
+                    print(f"Invalid Telegram message URL: {url}")
 
-        if message_to_send:
-            await client.send_message(dest_entity, message_to_send)
-            print("Message reposted successfully!")
-        else:
-            print(f"Could not find message with ID {message_id} in {source}.")
+    os.replace(temp_file, output_file)
+    print(f"Wrote new destination URLs to {output_file} (atomic write).")

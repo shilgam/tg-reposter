@@ -6,3 +6,4 @@ services:
     volumes:
       - ./src:/app/src
       - ./anon.session:/app/anon.session
+      - ./temp:/app/temp
