@@ -3,6 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ci
-    command: make test
+    command: pytest
     environment:
       - PYTHONPATH=/app
