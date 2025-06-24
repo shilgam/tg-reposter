@@ -62,9 +62,25 @@ async def repost_from_file(destination):
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         try:
             destination_id = normalize_channel_id(destination)
-            dest_entity = await client.get_entity(destination_id)
+
+            # Convert to integer like main branch does
+            try:
+                destination_id = int(destination_id)
+            except (ValueError, TypeError):
+                pass  # Keep as string if conversion fails
+
+            try:
+                dest_entity = await client.get_entity(destination_id)
+            except Exception as e1:
+                print(f"[WARN] get_entity failed for destination '{destination_id}': {e1}")
+                try:
+                    dest_entity = await client.get_input_entity(destination_id)
+                except Exception as e2:
+                    print(f"[ERROR] get_input_entity also failed for destination '{destination_id}': {e2}")
+                    print(f"Could not find the destination entity '{destination}'.")
+                    return
         except Exception as e:
-            print(f"Could not find the destination entity '{destination}'. Error: {e}")
+            print(f"Could not resolve the destination entity '{destination}'. Error: {e}")
             return
 
         with open(temp_file, "w", encoding="utf-8") as out:
@@ -73,6 +89,13 @@ async def repost_from_file(destination):
                 if channel and msg_id:
                     try:
                         source_id = normalize_channel_id(channel)
+
+                        # Convert to integer like main branch does
+                        try:
+                            source_id = int(source_id)
+                        except (ValueError, TypeError):
+                            pass  # Keep as string if conversion fails
+
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity, message_to_send)
