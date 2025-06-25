@@ -84,22 +84,9 @@ async def repost_from_file(destination):
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         try:
             destination_id = normalize_channel_id(destination)
-            try:
-                destination_id = int(destination_id)
-            except (ValueError, TypeError):
-                pass
-            try:
-                dest_entity = await client.get_entity(destination_id)
-            except Exception as e1:
-                print(f"[WARN] get_entity failed for destination '{destination_id}': {e1}", file=sys.stderr)
-                try:
-                    dest_entity = await client.get_input_entity(destination_id)
-                except Exception as e2:
-                    print(f"[ERROR] get_input_entity also failed for destination '{destination_id}': {e2}", file=sys.stderr)
-                    print(f"Could not find the destination entity '{destination}'.", file=sys.stderr)
-                    sys.exit(1)
+            dest_entity = await client.get_entity(destination_id)
         except Exception as e:
-            print(f"Could not resolve the destination entity '{destination}'. Error: {e}", file=sys.stderr)
+            print(f"Could not find the destination entity '{destination}'. Error: {e}", file=sys.stderr)
             sys.exit(1)
 
         with open(temp_file, "w", encoding="utf-8") as out:
@@ -108,10 +95,6 @@ async def repost_from_file(destination):
                 if channel and msg_id:
                     try:
                         source_id = normalize_channel_id(channel)
-                        try:
-                            source_id = int(source_id)
-                        except (ValueError, TypeError):
-                            pass
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity, message_to_send)
