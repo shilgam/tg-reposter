@@ -90,7 +90,8 @@ async def repost_from_file(destination, input_file="./temp/input/source_urls.txt
                 int_id = None
                 print(f"[DEBUG] destination_id could not be converted to int: {e}", file=sys.stderr)
 
-            # Try get_entity with string
+            # DO NOT REVERT: Always use integer channel IDs for Telethon entity/message resolution.
+            # String IDs will fail for private channels. This is intentional and required.
             dest_entity = None
             try:
                 dest_entity = await client.get_entity(int_id if int_id is not None else destination_id)
@@ -153,7 +154,8 @@ async def repost_from_file(destination, input_file="./temp/input/source_urls.txt
                         except Exception as e:
                             int_source_id = None
                             print(f"[DEBUG] source_id could not be converted to int: {e}", file=sys.stderr)
-                        # Always use int if possible
+                        # DO NOT REVERT: Always use integer channel IDs for Telethon entity/message resolution.
+                        # String IDs will fail for private channels. This is intentional and required.
                         message_to_send = await client.get_messages(int_source_id if int_source_id is not None else source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity_final, message_to_send)
