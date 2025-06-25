@@ -61,11 +61,9 @@ async def login():
             print("Login successful. Session file created/updated.")
 
 
-async def repost_from_file(destination):
+async def repost_from_file(destination, input_file="./temp/input/source_urls.txt", output_dir="./temp/output"):
     """Reads source message URLs from file and reposts them to the destination channel. Writes new message URLs to output file atomically."""
     session_name = "anon"
-    input_file = "./temp/input/source_urls.txt"
-    output_dir = "./temp/output"
     output_file = os.path.join(output_dir, "new_dest_urls.txt")
     temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
 

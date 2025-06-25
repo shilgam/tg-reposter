@@ -1,7 +1,12 @@
 import os
+
+import os
 import shutil
 import pytest
 import subprocess
+from unittest.mock import AsyncMock, patch
+import sys
+import src.reposter as reposter
 
 TEMP_INPUT = "./temp/input"
 TEMP_OUTPUT = "./temp/output"
@@ -110,3 +115,28 @@ def test_invalid_input_fails_gracefully(mock_telethon_client):
     assert b"error" in result.stderr.lower() or b"invalid" in result.stderr.lower()
     # assert not mock_telethon_client.send_message.called
     cleanup_temp_dirs()
+
+def test_repost_from_file_private_channel(monkeypatch, capsys, tmp_path):
+    # Prepare input file
+    input_dir = tmp_path / "input"
+    input_dir.mkdir(parents=True, exist_ok=True)
+    input_file = input_dir / "source_urls.txt"
+    input_file.write_text("https://t.me/c/1234567890/1\n")
+
+    output_dir = tmp_path / "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Patch paths in repost_from_file
+    monkeypatch.setattr(reposter.os.path, "exists", lambda p: True)
+    monkeypatch.setattr(reposter, "os", os)
+    monkeypatch.setattr(reposter, "sys", sys)
+
+    # Patch TelegramClient to raise exception for get_entity
+    with patch("src.reposter.TelegramClient") as MockClient:
+        instance = MockClient.return_value.__aenter__.return_value
+        instance.get_entity = AsyncMock(side_effect=Exception("Cannot find any entity corresponding to \"-1001234567890\""))
+        with pytest.raises(SystemExit):
+            import asyncio
+            asyncio.run(reposter.repost_from_file("1234567890", input_file=str(input_file), output_dir=str(output_dir)))
+        captured = capsys.readouterr()
+        assert "Could not find the destination entity" in captured.err
