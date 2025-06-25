@@ -49,7 +49,7 @@ def normalize_channel_id(channel):
 
 async def login():
     """Connects to Telegram and creates a session file if one doesn't exist."""
-    print("Attempting to connect to Telegram to create a session...")
+    print("Attempting to connect to Telegram to create a session...", file=sys.stderr)
     session_name = "anon"
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         if await client.is_user_authorized():
@@ -70,7 +70,7 @@ async def repost_from_file(destination):
     temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
 
     if not os.path.exists(input_file):
-        print(f"Input file {input_file} does not exist.")
+        print(f"Input file {input_file} does not exist.", file=sys.stderr)
         sys.exit(1)
 
     os.makedirs(output_dir, exist_ok=True)
@@ -78,7 +78,7 @@ async def repost_from_file(destination):
     with open(input_file, "r", encoding="utf-8") as f:
         source_urls = [line.strip() for line in f if line.strip()]
 
-    print(f"Read {len(source_urls)} source URLs from {input_file}.")
+    print(f"Read {len(source_urls)} source URLs from {input_file}.", file=sys.stderr)
 
     any_invalid = False
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
@@ -91,15 +91,15 @@ async def repost_from_file(destination):
             try:
                 dest_entity = await client.get_entity(destination_id)
             except Exception as e1:
-                print(f"[WARN] get_entity failed for destination '{destination_id}': {e1}")
+                print(f"[WARN] get_entity failed for destination '{destination_id}': {e1}", file=sys.stderr)
                 try:
                     dest_entity = await client.get_input_entity(destination_id)
                 except Exception as e2:
-                    print(f"[ERROR] get_input_entity also failed for destination '{destination_id}': {e2}")
-                    print(f"Could not find the destination entity '{destination}'.")
+                    print(f"[ERROR] get_input_entity also failed for destination '{destination_id}': {e2}", file=sys.stderr)
+                    print(f"Could not find the destination entity '{destination}'.", file=sys.stderr)
                     sys.exit(1)
         except Exception as e:
-            print(f"Could not resolve the destination entity '{destination}'. Error: {e}")
+            print(f"Could not resolve the destination entity '{destination}'. Error: {e}", file=sys.stderr)
             sys.exit(1)
 
         with open(temp_file, "w", encoding="utf-8") as out:
@@ -121,9 +121,9 @@ async def repost_from_file(destination):
                         else:
                             print(f"Could not find message with ID {msg_id} in {channel}.")
                     except Exception as e:
-                        print(f"Error reposting message {msg_id} from {channel}: {e}")
+                        print(f"Error reposting message {msg_id} from {channel}: {e}", file=sys.stderr)
                 else:
-                    print(f"Invalid Telegram message URL: {url}")
+                    print(f"Invalid Telegram message URL: {url}", file=sys.stderr)
                     any_invalid = True
 
     os.replace(temp_file, output_file)
