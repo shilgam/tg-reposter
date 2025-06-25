@@ -82,7 +82,61 @@ async def repost_from_file(destination, input_file="./temp/input/source_urls.txt
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         try:
             destination_id = normalize_channel_id(destination)
-            dest_entity = await client.get_entity(destination_id)
+            print(f"[DEBUG] destination_id after normalization: {destination_id}", file=sys.stderr)
+            try:
+                int_id = int(destination_id)
+                print(f"[DEBUG] destination_id as int: {int_id}", file=sys.stderr)
+            except Exception as e:
+                int_id = None
+                print(f"[DEBUG] destination_id could not be converted to int: {e}", file=sys.stderr)
+
+            # Try get_entity with string
+            dest_entity = None
+            try:
+                dest_entity = await client.get_entity(destination_id)
+                print(f"[DEBUG] get_entity with str succeeded: {dest_entity}", file=sys.stderr)
+            except Exception as e1:
+                print(f"[DEBUG] get_entity with str failed: {e1}", file=sys.stderr)
+
+            # Try get_entity with int
+            dest_entity_int = None
+            if int_id is not None:
+                try:
+                    dest_entity_int = await client.get_entity(int_id)
+                    print(f"[DEBUG] get_entity with int succeeded: {dest_entity_int}", file=sys.stderr)
+                except Exception as e2:
+                    print(f"[DEBUG] get_entity with int failed: {e2}", file=sys.stderr)
+
+            # Try get_input_entity with string
+            dest_input_entity = None
+            try:
+                dest_input_entity = await client.get_input_entity(destination_id)
+                print(f"[DEBUG] get_input_entity with str succeeded: {dest_input_entity}", file=sys.stderr)
+            except Exception as e3:
+                print(f"[DEBUG] get_input_entity with str failed: {e3}", file=sys.stderr)
+
+            # Try get_input_entity with int
+            dest_input_entity_int = None
+            if int_id is not None:
+                try:
+                    dest_input_entity_int = await client.get_input_entity(int_id)
+                    print(f"[DEBUG] get_input_entity with int succeeded: {dest_input_entity_int}", file=sys.stderr)
+                except Exception as e4:
+                    print(f"[DEBUG] get_input_entity with int failed: {e4}", file=sys.stderr)
+
+            # For actual use, fallback to the first successful one
+            if dest_entity is not None:
+                dest_entity_final = dest_entity
+            elif dest_entity_int is not None:
+                dest_entity_final = dest_entity_int
+            elif dest_input_entity is not None:
+                dest_entity_final = dest_input_entity
+            elif dest_input_entity_int is not None:
+                dest_entity_final = dest_input_entity_int
+            else:
+                print(f"Could not resolve the destination entity '{destination}'.", file=sys.stderr)
+                sys.exit(1)
+
         except Exception as e:
             print(f"Could not find the destination entity '{destination}'. Error: {e}", file=sys.stderr)
             sys.exit(1)
@@ -95,7 +149,7 @@ async def repost_from_file(destination, input_file="./temp/input/source_urls.txt
                         source_id = normalize_channel_id(channel)
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
                         if message_to_send:
-                            sent = await client.send_message(dest_entity, message_to_send)
+                            sent = await client.send_message(dest_entity_final, message_to_send)
                             new_url = f"https://t.me/{destination}/{sent.id}"
                             out.write(new_url + "\n")
                             print(f"Reposted message {msg_id} from {channel} to {destination} as {new_url}.")
