@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 TEST_MODE = os.environ.get("TEST_MODE") == "1"
 
@@ -70,7 +71,7 @@ async def repost_from_file(destination):
 
     if not os.path.exists(input_file):
         print(f"Input file {input_file} does not exist.")
-        return
+        sys.exit(1)
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -79,16 +80,14 @@ async def repost_from_file(destination):
 
     print(f"Read {len(source_urls)} source URLs from {input_file}.")
 
+    any_invalid = False
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         try:
             destination_id = normalize_channel_id(destination)
-
-            # Convert to integer like main branch does
             try:
                 destination_id = int(destination_id)
             except (ValueError, TypeError):
-                pass  # Keep as string if conversion fails
-
+                pass
             try:
                 dest_entity = await client.get_entity(destination_id)
             except Exception as e1:
@@ -98,10 +97,10 @@ async def repost_from_file(destination):
                 except Exception as e2:
                     print(f"[ERROR] get_input_entity also failed for destination '{destination_id}': {e2}")
                     print(f"Could not find the destination entity '{destination}'.")
-                    return
+                    sys.exit(1)
         except Exception as e:
             print(f"Could not resolve the destination entity '{destination}'. Error: {e}")
-            return
+            sys.exit(1)
 
         with open(temp_file, "w", encoding="utf-8") as out:
             for url in source_urls:
@@ -109,17 +108,13 @@ async def repost_from_file(destination):
                 if channel and msg_id:
                     try:
                         source_id = normalize_channel_id(channel)
-
-                        # Convert to integer like main branch does
                         try:
                             source_id = int(source_id)
                         except (ValueError, TypeError):
-                            pass  # Keep as string if conversion fails
-
+                            pass
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity, message_to_send)
-                            # Construct new message URL
                             new_url = f"https://t.me/{destination}/{sent.id}"
                             out.write(new_url + "\n")
                             print(f"Reposted message {msg_id} from {channel} to {destination} as {new_url}.")
@@ -129,6 +124,9 @@ async def repost_from_file(destination):
                         print(f"Error reposting message {msg_id} from {channel}: {e}")
                 else:
                     print(f"Invalid Telegram message URL: {url}")
+                    any_invalid = True
 
     os.replace(temp_file, output_file)
     print(f"Wrote new destination URLs to {output_file} (atomic write).")
+    if any_invalid:
+        sys.exit(1)
