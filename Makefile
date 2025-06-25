@@ -16,9 +16,11 @@ install: ## Install production and development dependencies.
 	pip install -r requirements.txt
 	pip install -r dev-requirements.txt
 
-test: ## Run tests using pytest.
-	@echo "Running tests..."
-	pytest
+test: ## Run tests using Docker Compose (CI style).
+	docker compose -f docker-compose.ci.yml up \
+		--build \
+		--abort-on-container-exit \
+		--exit-code-from reposter
 
 login: ## Creates a new session file by logging in.
 	@touch anon.session

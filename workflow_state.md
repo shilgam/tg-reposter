@@ -2,23 +2,21 @@
 _Last updated: 2025-06-22_
 
 ## State
-Phase: VALIDATE
-Status: READY
+Phase: CONSTRUCT
+Status: RUNNING
 CurrentItem: 9
 
 ## Plan
-1.  **Create `temp` directories**: Add a `make setup` command to create the `./temp/input` and `./temp/output` directories if they don't exist.
-2.  **Modify `repost` command**: Update the `repost` command in `src/cli.py`. It should no longer take `--source` and `--message-id` as arguments. It will now take a single `--destination` argument, which is required.
-3.  **Implement file reading**: In `src/reposter.py`, rename `repost_message` to `repost_from_file`. This function will now:
-    a. Read a list of source message URLs from `./temp/input/source_urls.txt`.
-    b. Use the destination channel provided via the `--destination` flag.
-4.  **Implement URL parsing**: Add a helper function to parse Telegram message URLs (`https://t.me/channel_name/12345`) to extract the channel name and message ID.
-5.  **Loop and repost**: In `repost_from_file`, loop through each source URL, parse it, and call the core Telethon `send_message` logic for each one.
-6.  **Implement atomic file writing**: After each successful repost, get the new message's URL and append it to a temporary file.
-7.  **Finalize output file**: Once the loop is complete, atomically rename the temporary file to `./temp/output/new_dest_urls.txt`.
-8.  **Update `Makefile`**: Change the `repost` target in the `Makefile` to reflect the new CLI structure. The `ARGS` variable will now pass the `--destination` flag.
-9.  **Update `README.md`**: Update the documentation to explain the new file-based workflow: how to create `source_urls.txt`, how to run the new `repost` command, and what to expect in `new_dest_urls.txt`.
-10. **Manual validation**: Request user to confirm the new workflow.
+1. Identify all file-driven repost logic scenarios to cover (private/public, source/destination channel combinations).
+2. Set up or update the test framework (pytest) and ensure Docker Compose runs tests as in CI.
+3. Mock Telethon API calls to avoid real Telegram traffic.
+4. Use real file I/O for input/output verification (input: source_urls.txt, output: new_dest_urls.txt, etc.).
+5. Write tests for each scenario:
+   - Correct reposting for each channel type combination
+   - Type, value, and URL format assertions
+   - Graceful failure on invalid input (negative scenarios)
+6. Ensure tests are discoverable and runnable via `make test` (Docker Compose).
+7. Await user review and approval before implementation.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -113,16 +111,25 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 5  | **Makefile workflow** — add Makefile targets for all main development and runtime tasks | done |
 | 6  | **GitHub Actions CI** — set up CI to run tests, and Docker build | done |
 | 7  | **Minimal test harness** — add `pytest`, write smoke test for PoC success | done |
-| 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | pending |
-| 9  | **File-driven repost logic** — read source URLs, repost, and write destination URLs | pending |
-| 10 | **Delete & sync commands** — implement `delete` and `sync` commands per `_CONTEXT.md` | pending |
-| 11 | **Robust logging & error handling** — add logging and exit on first error | pending |
-| 12 | **Comprehensive unit tests** — add unit tests with mocked Telethon, aim for 90% coverage | pending |
-| 13 | **Documentation pass** — expand `README.md` with usage instructions and badges | pending |
-| 14 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
+| 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | done |
+| 9  | **Basic automated tests for file-driven repost logic** — add tests for all channel type combinations, type/value/URL assertions, and error handling | pending |
+| 10 | **File-driven repost logic** — read source URLs, repost, and write destination URLs | pending |
+| 11 | **Delete & sync commands** — implement `delete` and `sync` commands per `_CONTEXT.md` | pending |
+| 12 | **Robust logging & error handling** — add logging and exit on first error | pending |
+| 13 | **Comprehensive unit tests** — add unit tests with mocked Telethon, aim for 90% coverage | pending |
+| 14 | **Documentation pass** — expand `README.md` with usage instructions and badges | pending |
+| 15 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
 
 ## Log
 <!-- AI appends detailed reasoning, tool output, and errors here -->
+- Enumerated repost logic scenarios for test coverage:
+  1. Private source → Private destination
+  2. Private source → Public destination
+  3. Public source → Private destination
+  4. Public source → Public destination
+- Each scenario will be tested for correct reposting, type/value/URL assertions, and error handling.
+- Verified pytest is present, test discovery works, and Docker Compose test execution is functional. Ready to proceed with mocking Telethon API for file-driven repost logic tests.
+- Added template pytest tests for all repost logic scenarios (private/public, source/destination) and a negative case. Each test uses temp input/output, prepares scenario-specific input, and asserts Telethon mock calls. Output file assertions are left as templates for future implementation.
 
 ## Workflow History
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
