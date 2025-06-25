@@ -1,7 +1,26 @@
 import os
 import re
 
-from telethon import TelegramClient
+TEST_MODE = os.environ.get("TEST_MODE") == "1"
+
+if TEST_MODE:
+    class DummyClient:
+        async def __aenter__(self): return self
+        async def __aexit__(self, exc_type, exc, tb): pass
+        async def send_message(self, *a, **kw):
+            class DummyMsg: id = 12345
+            return DummyMsg()
+        async def send_file(self, *a, **kw): return None
+        async def send_media_group(self, *a, **kw): return None
+        async def get_entity(self, *a, **kw): return "dummy_entity"
+        async def get_input_entity(self, *a, **kw): return "dummy_entity"
+        async def get_messages(self, *a, **kw):
+            class DummyMsg: pass
+            return DummyMsg()
+        async def is_user_authorized(self): return True
+    TelegramClient = DummyClient
+else:
+    from telethon import TelegramClient
 
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")

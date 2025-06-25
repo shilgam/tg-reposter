@@ -25,6 +25,7 @@ def test_private_source_to_private_dest(mock_telethon_client):
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
+    env["TEST_MODE"] = "1"
     result = subprocess.run([
         "python", "-m", "src.main", "repost",
         "--destination", dest
@@ -43,6 +44,7 @@ def test_private_source_to_public_dest(mock_telethon_client):
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
+    env["TEST_MODE"] = "1"
     result = subprocess.run([
         "python", "-m", "src.main", "repost",
         "--destination", dest
@@ -61,6 +63,7 @@ def test_public_source_to_private_dest(mock_telethon_client):
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
+    env["TEST_MODE"] = "1"
     result = subprocess.run([
         "python", "-m", "src.main", "repost",
         "--destination", dest
@@ -79,6 +82,7 @@ def test_public_source_to_public_dest(mock_telethon_client):
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
+    env["TEST_MODE"] = "1"
     result = subprocess.run([
         "python", "-m", "src.main", "repost",
         "--destination", dest
@@ -97,6 +101,7 @@ def test_invalid_input_fails_gracefully(mock_telethon_client):
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
+    env["TEST_MODE"] = "1"
     result = subprocess.run([
         "python", "-m", "src.main", "repost",
         "--destination", dest
