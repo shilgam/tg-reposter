@@ -5,6 +5,7 @@ TEST_MODE = os.environ.get("TEST_MODE") == "1"
 
 if TEST_MODE:
     class DummyClient:
+        def __init__(self, *args, **kwargs): pass
         async def __aenter__(self): return self
         async def __aexit__(self, exc_type, exc, tb): pass
         async def send_message(self, *a, **kw):
