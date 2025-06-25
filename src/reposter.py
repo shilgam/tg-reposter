@@ -93,12 +93,12 @@ async def repost_from_file(destination, input_file="./temp/input/source_urls.txt
             # Try get_entity with string
             dest_entity = None
             try:
-                dest_entity = await client.get_entity(destination_id)
-                print(f"[DEBUG] get_entity with str succeeded: {dest_entity}", file=sys.stderr)
+                dest_entity = await client.get_entity(int_id if int_id is not None else destination_id)
+                print(f"[DEBUG] get_entity with {'int' if int_id is not None else 'str'} succeeded: {dest_entity}", file=sys.stderr)
             except Exception as e1:
-                print(f"[DEBUG] get_entity with str failed: {e1}", file=sys.stderr)
+                print(f"[DEBUG] get_entity with {'int' if int_id is not None else 'str'} failed: {e1}", file=sys.stderr)
 
-            # Try get_entity with int
+            # Try get_entity with int (redundant if already tried above, but keep for debug symmetry)
             dest_entity_int = None
             if int_id is not None:
                 try:
@@ -110,12 +110,12 @@ async def repost_from_file(destination, input_file="./temp/input/source_urls.txt
             # Try get_input_entity with string
             dest_input_entity = None
             try:
-                dest_input_entity = await client.get_input_entity(destination_id)
-                print(f"[DEBUG] get_input_entity with str succeeded: {dest_input_entity}", file=sys.stderr)
+                dest_input_entity = await client.get_input_entity(int_id if int_id is not None else destination_id)
+                print(f"[DEBUG] get_input_entity with {'int' if int_id is not None else 'str'} succeeded: {dest_input_entity}", file=sys.stderr)
             except Exception as e3:
-                print(f"[DEBUG] get_input_entity with str failed: {e3}", file=sys.stderr)
+                print(f"[DEBUG] get_input_entity with {'int' if int_id is not None else 'str'} failed: {e3}", file=sys.stderr)
 
-            # Try get_input_entity with int
+            # Try get_input_entity with int (redundant if already tried above, but keep for debug symmetry)
             dest_input_entity_int = None
             if int_id is not None:
                 try:
@@ -147,7 +147,14 @@ async def repost_from_file(destination, input_file="./temp/input/source_urls.txt
                 if channel and msg_id:
                     try:
                         source_id = normalize_channel_id(channel)
-                        message_to_send = await client.get_messages(source_id, ids=msg_id)
+                        try:
+                            int_source_id = int(source_id)
+                            print(f"[DEBUG] source_id as int: {int_source_id}", file=sys.stderr)
+                        except Exception as e:
+                            int_source_id = None
+                            print(f"[DEBUG] source_id could not be converted to int: {e}", file=sys.stderr)
+                        # Always use int if possible
+                        message_to_send = await client.get_messages(int_source_id if int_source_id is not None else source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity_final, message_to_send)
                             new_url = f"https://t.me/{destination}/{sent.id}"
