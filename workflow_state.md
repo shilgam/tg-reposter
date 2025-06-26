@@ -7,16 +7,99 @@ Status: RUNNING
 CurrentItem: 9
 
 ## Plan
-1. Identify all file-driven repost logic scenarios to cover (private/public, source/destination channel combinations).
-2. Set up or update the test framework (pytest) and ensure Docker Compose runs tests as in CI.
-3. Mock Telethon API calls to avoid real Telegram traffic.
-4. Use real file I/O for input/output verification (input: source_urls.txt, output: new_dest_urls.txt, etc.).
-5. Write tests for each scenario:
-   - Correct reposting for each channel type combination
-   - Type, value, and URL format assertions
-   - Graceful failure on invalid input (negative scenarios)
-6. Ensure tests are discoverable and runnable via `make test` (Docker Compose).
-7. Await user review and approval before implementation.
+
+1. **Identify all file-driven repost logic scenarios to cover (private/public, source/destination channel combinations).**
+   - Public source → Public destination (`@channel1` → `@channel2`)
+   - Private source → Private destination (`-100123456789` → `-100987654321`)
+   - **REVIEW CHECKPOINT**: Stop and ask user to review the identified scenarios
+   - **TEST CHECKPOINT**: Run `make test` and analyze results. If tests fail, propose solutions:
+     - Option A: Fix existing test issues before proceeding
+     - Option B: Skip broken tests and continue with new implementation
+     - Option C: Revert changes and try different approach
+
+2. **Set up or update the test framework (pytest) and ensure Docker Compose runs tests as in CI.**
+   - Verify pytest configuration in `tests/conftest.py` is complete
+   - Ensure Docker Compose test execution works via `make test`
+   - Confirm test discovery and execution in CI environment
+   - Add any missing test dependencies to `dev-requirements.txt`
+   - **REVIEW CHECKPOINT**: Stop and ask user to review the test framework setup
+   - **TEST CHECKPOINT**: Run `make test` and analyze results. If tests fail, propose solutions:
+     - Option A: Fix Docker Compose configuration issues
+     - Option B: Update pytest configuration
+     - Option C: Add missing dependencies
+     - Option D: Debug test discovery problems
+
+3. **Mock Telethon API calls to avoid real Telegram traffic.**
+   - Enhance existing `mock_telethon_client` fixture in `conftest.py`
+   - Create realistic mock message objects with proper structure
+   - Mock channel entity resolution for both public and private channels
+   - Mock `get_messages()` method to return realistic message objects
+   - Mock `send_message()` method to return messages with proper IDs
+   - Mock `get_entity()` and `get_input_entity()` for channel lookup
+   - Add mock error scenarios (permission denied, channel not found, etc.)
+   - **REVIEW CHECKPOINT**: Stop and ask user to review the mock implementation
+   - **TEST CHECKPOINT**: Run `make test` and analyze results. If tests fail, propose solutions:
+     - Option A: Fix mock object structure issues
+     - Option B: Adjust mock method signatures
+     - Option C: Update mock return values
+     - Option D: Debug async mock problems
+
+4. **Use real file I/O for input/output verification (input: source_urls.txt, output: new_dest_urls.txt, etc.).**
+   - Create temporary test directories structure (`./temp/input/`, `./temp/output/`)
+   - Set up test file cleanup utilities
+   - Verify atomic file write operations work correctly
+   - Test file existence and content validation
+   - **REVIEW CHECKPOINT**: Stop and ask user to review the file I/O implementation
+   - **TEST CHECKPOINT**: Run `make test` and analyze results. If tests fail, propose solutions:
+     - Option A: Fix file permission issues
+     - Option B: Debug directory creation problems
+     - Option C: Fix atomic write operations
+     - Option D: Resolve file cleanup issues
+
+5. **Write tests for each scenario:**
+   - **Correct reposting for each channel type combination:**
+     - Test public → public reposting with valid URLs
+     - Test private → private reposting with valid URLs
+   - **Type, value, and URL format assertions:**
+     - Verify correct URL parsing for public channels (`https://t.me/channel/123`)
+     - Verify correct URL parsing for private channels (`https://t.me/c/123456789/123`)
+     - Verify channel ID normalization (string vs integer handling)
+     - Verify output URL format matches expected pattern
+   - **Graceful failure on invalid input (negative scenarios):**
+     - Test invalid URL format handling
+     - Test non-existent channel error handling
+     - Test permission denied error handling
+     - Test empty input file handling
+     - Test malformed URL handling
+   - **REVIEW CHECKPOINT**: Stop and ask user to review the test scenarios implementation
+   - **TEST CHECKPOINT**: Run `make test` and analyze results. If tests fail, propose solutions:
+     - Option A: Fix test assertion failures
+     - Option B: Debug test data setup issues
+     - Option C: Resolve test isolation problems
+     - Option D: Fix test timing issues
+
+6. **Ensure tests are discoverable and runnable via `make test` (Docker Compose).**
+   - Verify all tests are properly named and discoverable by pytest
+   - Test execution via `make test` command
+   - Verify tests run successfully in Docker environment
+   - Confirm test output is clear and actionable
+   - **REVIEW CHECKPOINT**: Stop and ask user to review the test execution setup
+   - **TEST CHECKPOINT**: Run `make test` and analyze results. If tests fail, propose solutions:
+     - Option A: Fix test discovery issues
+     - Option B: Debug Docker environment problems
+     - Option C: Resolve test execution timing
+     - Option D: Fix test output formatting
+
+7. **Await user review and approval before implementation.**
+   - Present this plan for review
+   - Get approval to proceed with implementation
+   - Begin implementation in order of checklist items
+   - **REVIEW CHECKPOINT**: Stop and ask user to review the complete implementation
+   - **TEST CHECKPOINT**: Run `make test` and analyze results. If tests fail, propose solutions:
+     - Option A: Fix integration issues between components
+     - Option B: Debug end-to-end test failures
+     - Option C: Resolve performance issues
+     - Option D: Fix final configuration problems
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
