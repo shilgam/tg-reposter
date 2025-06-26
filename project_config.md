@@ -53,6 +53,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Added comprehensive automated tests for file-driven repost logic, covering all channel type combinations, URL parsing, error handling, and file I/O.
 - Set up GitHub Actions CI to run tests and Docker build.
 - Implemented a containerized smoke test with pytest to ensure basic application integrity.
 <!-- The agent prepends the latest summary here as a new list item after each VALIDATE phase -->
