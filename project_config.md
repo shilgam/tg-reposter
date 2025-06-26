@@ -12,6 +12,12 @@ Automate copying every message from a Telegram channel to channel so that the po
 - **Framework(s) & Libraries:** Telethon 1.x, Click (CLI), asyncio
 - **Build / Tooling:** Poetry, Ruff, isort, pytest, Make, Docker
 
+## Development Workflow
+
+- All tests must be run using `make test`.
+- The LLM assistant should execute `make test` after each atomic change or sub-step during the CONSTRUCT phase, but only if all necessary fixes for that sub-step are believed to be in place and all tests are expected to pass.
+- If tests fail, the assistant must analyze the failures, explain the root cause, and suggest appropriate fixes before continuing.
+
 ## Core Capabilities
 
 - Repost **text, captions, single photos, and multi-photo albums**
