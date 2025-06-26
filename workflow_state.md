@@ -8,6 +8,55 @@ CurrentItem: 11
 
 ## Plan
 Item 10: File-driven repost logic implementation - COMPLETED
+Item 11: Delete & sync commands implementation
+
+**Requirements from _CONTEXT.md:**
+
+1. **`make delete` command:**
+   - If `LIST=` arg is given, use that file
+   - Otherwise, pick the most recent `*_old_dest_urls.txt` in `./temp/output/`
+   - Delete each URL in the file from the public channel
+   - After final successful deletion, rename file to `{TIMESTAMP}_deleted.txt`
+
+2. **`make sync` command:**
+   - Run the full repost algorithm
+   - Only upon success, perform the delete algorithm on the archived list
+   - Abort on any error
+
+**Implementation Plan:**
+
+1. **Add delete functionality to `src/reposter.py`:**
+   - Create `delete_from_file(list_file=None)` function
+   - Parse URLs from list file (or find most recent `*_old_dest_urls.txt`)
+   - Extract message IDs from URLs
+   - Use Telethon to delete messages
+   - Rename file to `{TIMESTAMP}_deleted.txt` on success
+
+2. **Add sync functionality to `src/reposter.py`:**
+   - Create `sync_operation(source, destination, delete_list=None)` function
+   - Run `repost_from_file()` first
+   - On success, run `delete_from_file()` with archived list
+   - Handle errors and abort on any failure
+
+3. **Update CLI commands in `src/cli.py`:**
+   - Add `--list` option to delete command
+   - Add proper arguments to sync command
+   - Connect CLI to new reposter functions
+
+4. **Add tests for new functionality:**
+   - Test delete command with explicit list file
+   - Test delete command with auto-detection of most recent file
+   - Test sync command end-to-end
+   - Test error handling and file operations
+
+5. **Update Makefile integration:**
+   - Ensure `make delete LIST=file` works
+   - Ensure `make sync SRC=file DEL=file` works
+
+**Files to modify:**
+- `src/reposter.py` - Add delete and sync functions
+- `src/cli.py` - Update CLI commands
+- `tests/` - Add new test files for delete and sync functionality
 
 The file-driven repost logic is already fully implemented and working:
 
