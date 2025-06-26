@@ -40,7 +40,7 @@ def test_private_source_to_public_dest(mock_telethon_client):
     setup_temp_dirs()
     with open(SOURCE_FILE, "w") as f:
         f.write("https://t.me/c/123456789/2\n")
-    dest = "@antalia_sales"  # Example public channel username
+    dest = "@dummy_channel991"  # Example public channel username
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
@@ -78,7 +78,7 @@ def test_public_source_to_public_dest(mock_telethon_client):
     setup_temp_dirs()
     with open(SOURCE_FILE, "w") as f:
         f.write("https://t.me/publicsource/4\n")
-    dest = "@antalia_sales"  # Example public channel username
+    dest = "@dummy_channel991"  # Example public channel username
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
@@ -97,7 +97,7 @@ def test_invalid_input_fails_gracefully(mock_telethon_client):
     setup_temp_dirs()
     with open(SOURCE_FILE, "w") as f:
         f.write("not_a_valid_url\n")
-    dest = "@antalia_sales"
+    dest = "@dummy_channel991"
     env = os.environ.copy()
     env["API_ID"] = "12345"
     env["API_HASH"] = "testhash"
