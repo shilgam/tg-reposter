@@ -44,9 +44,6 @@ A simple Telegram automation script to automatically repost messages from a sour
     ```
     API_ID=...
     API_HASH=...
-    SOURCE_CHANNEL_ID=...
-    DESTINATION_CHANNEL_ID=...
-    SOURCE_MESSAGE_ID=... # Optional: for a specific message
     ```
 
 4.  **Log in to create a session file:**
@@ -77,13 +74,11 @@ To repost multiple messages, use the new file-based workflow:
      ```
 
 2. **Run the repost command:**
-   - Use the Makefile target and specify your destination channel:
+   - Use the Makefile target and specify your destination channel. You can also specify a custom source file with the `--source` option (defaults to `./temp/input/source_urls.txt`):
      ```bash
      make repost ARGS="--destination=<destination_channel>"
-     ```
-   - Example:
-     ```bash
-     make repost ARGS="--destination=my_dest_channel"
+     # Or, to use a custom input file:
+     make repost ARGS="--source=./path/to/your_input.txt --destination=<destination_channel>"
      ```
 
 3. **Check the output:**

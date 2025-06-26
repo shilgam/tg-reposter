@@ -13,10 +13,11 @@ def cli():
 
 @cli.command()
 @click.option("--destination", required=True, help="Destination channel ID or username.")
-def repost(destination):
+@click.option("--source", required=False, default="./temp/input/source_urls.txt", help="Source file with message URLs.")
+def repost(destination, source):
     """Reposts messages from file to the specified destination."""
-    click.echo(f"Reposting messages to {destination}...")
-    asyncio.run(repost_from_file(destination))
+    click.echo(f"Reposting messages to {destination} from {source}...")
+    asyncio.run(repost_from_file(destination, source))
     click.echo("Repost command finished.")
 
 

@@ -1,7 +1,30 @@
 import os
 import re
+import sys
 
-from telethon import TelegramClient
+# Define DummyClient at module level so it can be mocked in tests
+class DummyClient:
+    def __init__(self, *args, **kwargs): pass
+    async def __aenter__(self): return self
+    async def __aexit__(self, exc_type, exc, tb): pass
+    async def send_message(self, *a, **kw):
+        class DummyMsg: id = 12345
+        return DummyMsg()
+    async def send_file(self, *a, **kw): return None
+    async def send_media_group(self, *a, **kw): return None
+    async def get_entity(self, *a, **kw): return "dummy_entity"
+    async def get_input_entity(self, *a, **kw): return "dummy_entity"
+    async def get_messages(self, *a, **kw):
+        class DummyMsg: pass
+        return DummyMsg()
+    async def is_user_authorized(self): return True
+
+TEST_MODE = os.environ.get("TEST_MODE") == "1"
+
+if TEST_MODE:
+    TelegramClient = DummyClient
+else:
+    from telethon import TelegramClient
 
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
@@ -28,7 +51,7 @@ def normalize_channel_id(channel):
 
 async def login():
     """Connects to Telegram and creates a session file if one doesn't exist."""
-    print("Attempting to connect to Telegram to create a session...")
+    print("Attempting to connect to Telegram to create a session...", file=sys.stderr)
     session_name = "anon"
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         if await client.is_user_authorized():
@@ -40,48 +63,50 @@ async def login():
             print("Login successful. Session file created/updated.")
 
 
-async def repost_from_file(destination):
+async def repost_from_file(destination, source=None):
     """Reads source message URLs from file and reposts them to the destination channel. Writes new message URLs to output file atomically."""
     session_name = "anon"
-    input_file = "./temp/input/source_urls.txt"
+    input_file = source or "./temp/input/source_urls.txt"
     output_dir = "./temp/output"
     output_file = os.path.join(output_dir, "new_dest_urls.txt")
     temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
 
     if not os.path.exists(input_file):
-        print(f"Input file {input_file} does not exist.")
-        return
+        print(f"Input file {input_file} does not exist.", file=sys.stderr)
+        sys.exit(1)
 
     os.makedirs(output_dir, exist_ok=True)
 
     with open(input_file, "r", encoding="utf-8") as f:
         source_urls = [line.strip() for line in f if line.strip()]
 
-    print(f"Read {len(source_urls)} source URLs from {input_file}.")
+    print(f"Read {len(source_urls)} source URLs from {input_file}.", file=sys.stderr)
 
+    any_invalid = False
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         try:
             destination_id = normalize_channel_id(destination)
-
-            # Convert to integer like main branch does
             try:
+                # Try to convert destination_id to int if possible (required for private channels)
                 destination_id = int(destination_id)
             except (ValueError, TypeError):
-                pass  # Keep as string if conversion fails
-
+                # If conversion fails, keep as string (works for public channels/usernames)
+                pass
+            # Telethon requires integer IDs for private channels; string usernames work for public channels.
+            # If you use a string for a private channel, entity resolution will fail.
             try:
                 dest_entity = await client.get_entity(destination_id)
             except Exception as e1:
-                print(f"[WARN] get_entity failed for destination '{destination_id}': {e1}")
+                print(f"[WARN] get_entity failed for destination '{destination_id}': {e1}", file=sys.stderr)
                 try:
                     dest_entity = await client.get_input_entity(destination_id)
                 except Exception as e2:
-                    print(f"[ERROR] get_input_entity also failed for destination '{destination_id}': {e2}")
-                    print(f"Could not find the destination entity '{destination}'.")
-                    return
+                    print(f"[ERROR] get_input_entity also failed for destination '{destination_id}': {e2}", file=sys.stderr)
+                    print(f"Could not find the destination entity '{destination}'.", file=sys.stderr)
+                    sys.exit(1)
         except Exception as e:
-            print(f"Could not resolve the destination entity '{destination}'. Error: {e}")
-            return
+            print(f"Could not resolve the destination entity '{destination}'. Error: {e}", file=sys.stderr)
+            sys.exit(1)
 
         with open(temp_file, "w", encoding="utf-8") as out:
             for url in source_urls:
@@ -89,26 +114,29 @@ async def repost_from_file(destination):
                 if channel and msg_id:
                     try:
                         source_id = normalize_channel_id(channel)
-
-                        # Convert to integer like main branch does
                         try:
+                            # Try to convert source_id to int if possible (required for private channels)
                             source_id = int(source_id)
                         except (ValueError, TypeError):
-                            pass  # Keep as string if conversion fails
-
+                            # If conversion fails, keep as string (works for public channels/usernames)
+                            pass
+                        # Telethon requires integer IDs for private channels; string usernames work for public channels.
+                        # If you use a string for a private channel, message resolution will fail.
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity, message_to_send)
-                            # Construct new message URL
                             new_url = f"https://t.me/{destination}/{sent.id}"
                             out.write(new_url + "\n")
                             print(f"Reposted message {msg_id} from {channel} to {destination} as {new_url}.")
                         else:
                             print(f"Could not find message with ID {msg_id} in {channel}.")
                     except Exception as e:
-                        print(f"Error reposting message {msg_id} from {channel}: {e}")
+                        print(f"Error reposting message {msg_id} from {channel}: {e}", file=sys.stderr)
                 else:
-                    print(f"Invalid Telegram message URL: {url}")
+                    print(f"Invalid Telegram message URL: {url}", file=sys.stderr)
+                    any_invalid = True
 
     os.replace(temp_file, output_file)
     print(f"Wrote new destination URLs to {output_file} (atomic write).")
+    if any_invalid:
+        sys.exit(1)
