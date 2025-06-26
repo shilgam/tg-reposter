@@ -139,6 +139,27 @@ class TestUrlParsingAndFormatting:
         assert mock_telethon_client.get_entity.called
         cleanup_temp_dirs()
 
+    async def test_private_channel_id_conversion(self, temp_dirs, mock_telethon_client):
+        """Verify that private channel IDs are properly converted to integers"""
+        setup_temp_dirs()
+        write_source_urls(["https://t.me/c/123456789/123"])
+        dest = "2763892937"  # String ID that should be converted to int
+
+        await repost_from_file(dest)
+
+        # Verify that get_entity was called with the integer version of the destination ID
+        assert mock_telethon_client.get_entity.called
+        call_args = mock_telethon_client.get_entity.call_args
+        # The destination ID should be converted to int: -1002763892937
+        assert call_args[0][0] == -1002763892937
+
+        # Verify that get_messages was called with the integer version of the source ID
+        assert mock_telethon_client.get_messages.called
+        call_args = mock_telethon_client.get_messages.call_args
+        # The source ID should be converted to int: -100123456789
+        assert call_args[0][0] == -100123456789
+        cleanup_temp_dirs()
+
     async def test_output_url_format(self, temp_dirs, mock_telethon_client):
         """Verify output URL format matches expected pattern"""
         setup_temp_dirs()
