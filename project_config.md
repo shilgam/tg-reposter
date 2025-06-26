@@ -53,6 +53,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Completed file-driven repost logic implementation with CLI integration, supporting both public and private channels with atomic file operations.
 - Implemented comprehensive automated tests for file-driven repost logic covering all channel type combinations, URL parsing, error handling, and file I/O operations.
 - Set up GitHub Actions CI to run tests and Docker build.
 - Implemented a containerized smoke test with pytest to ensure basic application integrity.
