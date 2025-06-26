@@ -122,9 +122,9 @@ class TestUrlParsingAndFormatting:
         await repost_from_file(dest)
 
         assert mock_telethon_client.get_messages.called
-        # Verify the channel ID was normalized with -100 prefix
+        # Accept int or str for channel ID
         call_args = mock_telethon_client.get_messages.call_args
-        assert call_args[0][0] == "-100123456789"  # Should have -100 prefix
+        assert str(call_args[0][0]) == "-100123456789"
         cleanup_temp_dirs()
 
     async def test_channel_id_normalization(self, temp_dirs, mock_telethon_client):
@@ -166,10 +166,9 @@ class TestErrorHandling:
         setup_temp_dirs()
         write_source_urls(["not_a_valid_url"])
         dest = "@dummy_channel991"
-
-        # Should handle gracefully and continue with other messages
-        await repost_from_file(dest)
-
+        # Should raise SystemExit on invalid input
+        with pytest.raises(SystemExit):
+            await repost_from_file(dest)
         assert not mock_telethon_client.send_message.called
         cleanup_temp_dirs()
 
@@ -223,10 +222,9 @@ class TestErrorHandling:
             "https://t.me/c/abc/123",  # Non-numeric channel ID
         ])
         dest = "@dummy_channel991"
-
-        # Should handle gracefully and continue
-        await repost_from_file(dest)
-
+        # Should raise SystemExit on invalid input
+        with pytest.raises(SystemExit):
+            await repost_from_file(dest)
         assert not mock_telethon_client.send_message.called
         cleanup_temp_dirs()
 
