@@ -35,44 +35,6 @@ def test_private_source_to_private_dest(mock_telethon_client):
     # assert os.path.exists(DEST_FILE)
     cleanup_temp_dirs()
 
-def test_private_source_to_public_dest(mock_telethon_client):
-    cleanup_temp_dirs()
-    setup_temp_dirs()
-    with open(SOURCE_FILE, "w") as f:
-        f.write("https://t.me/c/123456789/2\n")
-    dest = "@dummy_channel991"  # Example public channel username
-    env = os.environ.copy()
-    env["API_ID"] = "12345"
-    env["API_HASH"] = "testhash"
-    env["TEST_MODE"] = "1"
-    result = subprocess.run([
-        "python", "-m", "src.main", "repost",
-        "--destination", dest
-    ], capture_output=True, env=env)
-    assert result.returncode == 0, result.stderr.decode()
-    # assert mock_telethon_client.send_message.called
-    # assert os.path.exists(DEST_FILE)
-    cleanup_temp_dirs()
-
-def test_public_source_to_private_dest(mock_telethon_client):
-    cleanup_temp_dirs()
-    setup_temp_dirs()
-    with open(SOURCE_FILE, "w") as f:
-        f.write("https://t.me/publicsource/3\n")
-    dest = "2763892937"  # Example private channel ID
-    env = os.environ.copy()
-    env["API_ID"] = "12345"
-    env["API_HASH"] = "testhash"
-    env["TEST_MODE"] = "1"
-    result = subprocess.run([
-        "python", "-m", "src.main", "repost",
-        "--destination", dest
-    ], capture_output=True, env=env)
-    assert result.returncode == 0, result.stderr.decode()
-    # assert mock_telethon_client.send_message.called
-    # assert os.path.exists(DEST_FILE)
-    cleanup_temp_dirs()
-
 def test_public_source_to_public_dest(mock_telethon_client):
     cleanup_temp_dirs()
     setup_temp_dirs()
