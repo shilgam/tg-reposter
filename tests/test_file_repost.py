@@ -11,15 +11,6 @@ SOURCE_FILE = os.path.join(TEMP_INPUT, "source_urls.txt")
 DEST_FILE = os.path.join(TEMP_OUTPUT, "new_dest_urls.txt")
 
 
-def setup_temp_dirs():
-    os.makedirs(TEMP_INPUT, exist_ok=True)
-    os.makedirs(TEMP_OUTPUT, exist_ok=True)
-
-def cleanup_temp_dirs():
-    # Only clean up output directory, preserve input directory
-    if os.path.exists(TEMP_OUTPUT):
-        shutil.rmtree(TEMP_OUTPUT, ignore_errors=True)
-
 def create_temp_source_file(urls, filename=None):
     """Create a temporary source file with unique name to avoid conflicts"""
     if filename is None:
@@ -51,7 +42,6 @@ class TestChannelTypeCombinations:
     """Test correct reposting for each channel type combination"""
     async def test_public_source_to_public_dest(self, temp_dirs, mock_telethon_client):
         """Test public channel to public channel reposting"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/publicsource/4"])
         dest = "@dummy_channel991"
         await repost_from_file(dest)
@@ -60,11 +50,9 @@ class TestChannelTypeCombinations:
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 1
         assert dest_urls[0].startswith("https://t.me/")
-        cleanup_temp_dirs()
 
     async def test_private_source_to_private_dest(self, temp_dirs, mock_telethon_client):
         """Test private channel to private channel reposting"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/c/123456789/1"])
         dest = "2763892937"  # Private channel ID
         await repost_from_file(dest)
@@ -72,27 +60,22 @@ class TestChannelTypeCombinations:
         assert os.path.exists(DEST_FILE)
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 1
-        cleanup_temp_dirs()
 
     async def test_public_source_to_private_dest(self, temp_dirs, mock_telethon_client):
         """Test public channel to private channel reposting"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/publicsource/4"])
         dest = "2763892937"  # Private channel ID
         await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
         assert os.path.exists(DEST_FILE)
-        cleanup_temp_dirs()
 
     async def test_private_source_to_public_dest(self, temp_dirs, mock_telethon_client):
         """Test private channel to public channel reposting"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/c/123456789/1"])
         dest = "@dummy_channel991"
         await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
         assert os.path.exists(DEST_FILE)
-        cleanup_temp_dirs()
 
 
 @pytest.mark.asyncio
@@ -101,7 +84,6 @@ class TestUrlParsingAndFormatting:
 
     async def test_public_channel_url_parsing(self, temp_dirs, mock_telethon_client):
         """Verify correct URL parsing for public channels"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/channel/123"])
         dest = "@dummy_channel991"
 
@@ -111,11 +93,9 @@ class TestUrlParsingAndFormatting:
         # Verify the channel name was extracted correctly
         call_args = mock_telethon_client.get_messages.call_args
         assert call_args[0][0] == "channel"  # First positional arg should be channel name
-        cleanup_temp_dirs()
 
     async def test_private_channel_url_parsing(self, temp_dirs, mock_telethon_client):
         """Verify correct URL parsing for private channels"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/c/123456789/123"])
         dest = "@dummy_channel991"
 
@@ -125,11 +105,9 @@ class TestUrlParsingAndFormatting:
         # Accept int or str for channel ID
         call_args = mock_telethon_client.get_messages.call_args
         assert str(call_args[0][0]) == "-100123456789"
-        cleanup_temp_dirs()
 
     async def test_channel_id_normalization(self, temp_dirs, mock_telethon_client):
         """Verify channel ID normalization (string vs integer handling)"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/c/123456789/123"])
         dest = "2763892937"  # String ID that should be normalized
 
@@ -137,11 +115,9 @@ class TestUrlParsingAndFormatting:
 
         # Verify destination entity resolution was called with normalized ID
         assert mock_telethon_client.get_entity.called
-        cleanup_temp_dirs()
 
     async def test_private_channel_id_conversion(self, temp_dirs, mock_telethon_client):
         """Verify that private channel IDs are properly converted to integers"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/c/123456789/123"])
         dest = "2763892937"  # String ID that should be converted to int
 
@@ -158,11 +134,9 @@ class TestUrlParsingAndFormatting:
         call_args = mock_telethon_client.get_messages.call_args
         # The source ID should be converted to int: -100123456789
         assert call_args[0][0] == -100123456789
-        cleanup_temp_dirs()
 
     async def test_output_url_format(self, temp_dirs, mock_telethon_client):
         """Verify output URL format matches expected pattern"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/publicsource/4"])
         dest = "@dummy_channel991"
 
@@ -175,7 +149,6 @@ class TestUrlParsingAndFormatting:
         url = dest_urls[0]
         assert url.startswith("https://t.me/")
         assert "/" in url.split("t.me/")[1]  # Should have channel/message_id format
-        cleanup_temp_dirs()
 
 
 @pytest.mark.asyncio
@@ -184,18 +157,15 @@ class TestErrorHandling:
 
     async def test_invalid_url_format(self, temp_dirs, mock_telethon_client):
         """Test invalid URL format handling"""
-        setup_temp_dirs()
         write_source_urls(["not_a_valid_url"])
         dest = "@dummy_channel991"
         # Should raise SystemExit on invalid input
         with pytest.raises(SystemExit):
             await repost_from_file(dest)
         assert not mock_telethon_client.send_message.called
-        cleanup_temp_dirs()
 
     async def test_nonexistent_channel_error(self, temp_dirs, mock_telethon_client):
         """Test non-existent channel error handling"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/nonexistent/123"])
         dest = "@dummy_channel991"
 
@@ -205,11 +175,8 @@ class TestErrorHandling:
         # Should handle gracefully and continue with other messages
         await repost_from_file(dest)
 
-        cleanup_temp_dirs()
-
     async def test_permission_denied_error(self, temp_dirs, mock_telethon_client):
         """Test permission denied error handling"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/privatechannel/123"])
         dest = "@dummy_channel991"
 
@@ -220,22 +187,17 @@ class TestErrorHandling:
         # Should handle gracefully and continue
         await repost_from_file(dest)
 
-        cleanup_temp_dirs()
-
     async def test_empty_input_file(self, temp_dirs, mock_telethon_client):
         """Test empty input file handling"""
-        setup_temp_dirs()
         write_source_urls([])  # Empty file
         dest = "@dummy_channel991"
 
         await repost_from_file(dest)
 
         assert not mock_telethon_client.send_message.called
-        cleanup_temp_dirs()
 
     async def test_malformed_url_handling(self, temp_dirs, mock_telethon_client):
         """Test malformed URL handling"""
-        setup_temp_dirs()
         write_source_urls([
             "https://t.me/",  # Missing channel and message
             "https://t.me/channel/",  # Missing message ID
@@ -247,7 +209,6 @@ class TestErrorHandling:
         with pytest.raises(SystemExit):
             await repost_from_file(dest)
         assert not mock_telethon_client.send_message.called
-        cleanup_temp_dirs()
 
 
 @pytest.mark.asyncio
@@ -256,7 +217,6 @@ class TestFileIOOperations:
 
     async def test_atomic_file_write(self, temp_dirs, mock_telethon_client):
         """Test that output file is written atomically"""
-        setup_temp_dirs()
         write_source_urls(["https://t.me/publicsource/4"])
         dest = "@dummy_channel991"
 
@@ -268,11 +228,9 @@ class TestFileIOOperations:
         assert os.path.exists(DEST_FILE)
         # Temp file should not exist after successful write
         assert not os.path.exists(temp_file)
-        cleanup_temp_dirs()
 
     async def test_file_existence_validation(self, temp_dirs, mock_telethon_client):
         """Test file existence and content validation"""
-        setup_temp_dirs()
         # Remove the default source file to test non-existence
         if os.path.exists(SOURCE_FILE):
             os.remove(SOURCE_FILE)
@@ -283,11 +241,8 @@ class TestFileIOOperations:
         with pytest.raises(SystemExit):
             await repost_from_file(dest)
 
-        cleanup_temp_dirs()
-
     async def test_multiple_messages_processing(self, temp_dirs, mock_telethon_client):
         """Test processing multiple messages from input file"""
-        setup_temp_dirs()
         write_source_urls([
             "https://t.me/publicsource/1",
             "https://t.me/publicsource/2",
@@ -299,7 +254,6 @@ class TestFileIOOperations:
 
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 3
-        cleanup_temp_dirs()
 
 
 @pytest.mark.asyncio
@@ -308,7 +262,6 @@ class TestIntegrationScenarios:
 
     async def test_mixed_channel_types_in_single_file(self, temp_dirs, mock_telethon_client):
         """Test processing mixed public and private channel URLs in same file"""
-        setup_temp_dirs()
         write_source_urls([
             "https://t.me/publicsource/1",
             "https://t.me/c/123456789/2",
@@ -320,11 +273,9 @@ class TestIntegrationScenarios:
 
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 3
-        cleanup_temp_dirs()
 
     async def test_custom_source_file_path(self, temp_dirs, mock_telethon_client):
         """Test using custom source file path"""
-        setup_temp_dirs()
         custom_source = create_temp_source_file(["https://t.me/publicsource/4"])
 
         dest = "@dummy_channel991"
@@ -332,4 +283,3 @@ class TestIntegrationScenarios:
         await repost_from_file(dest, custom_source)
 
         assert mock_telethon_client.send_message.called
-        cleanup_temp_dirs()
