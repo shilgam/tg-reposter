@@ -88,4 +88,6 @@ To repost multiple messages, use the new file-based workflow:
 
 ### Other Commands
 
-*   `make delete ARGS="..."`: Deletes messages. (Not yet implemented)
+*   `make delete ARGS="--delete-urls=<file>"`: Deletes messages from a list of URLs. If no file is specified, auto-detects the most recent `dest_urls_to_delete.txt` file.
+*   `make sync ARGS="--destination=<channel> --source=<file>"`: Runs repost then delete operations sequentially.
+*   `make login`: Creates a new session file by logging in to Telegram.

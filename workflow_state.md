@@ -10,53 +10,66 @@ CurrentItem: 11
 Item 10: File-driven repost logic implementation - COMPLETED
 Item 11: Delete & sync commands implementation
 
-**Requirements from _CONTEXT.md:**
+**Current Implementation Pattern (from Makefile):**
+- All commands use `make <command> ARGS="--option1=value1 --option2=value2"`
+- CLI commands receive arguments via Click options
+- Commands run in Docker container via `docker-compose run --rm reposter`
+
+**Requirements from _CONTEXT.md (updated for current pattern):**
 
 1. **`make delete` command:**
-   - If `LIST=` arg is given, use that file
-   - Otherwise, pick the most recent `*_old_dest_urls.txt` in `./temp/output/`
-   - Delete each URL in the file from the public channel
+   - Usage: `make delete ARGS="--delete-urls=<file>"`
+   - If `--delete-urls` not provided, auto-detect most recent `dest_urls_to_delete.txt` in `./temp/output/`
+   - Delete each URL in the file from the destination channel (inferred from URLs)
    - After final successful deletion, rename file to `{TIMESTAMP}_deleted.txt`
+   - Stop immediately on any error (data integrity first)
 
 2. **`make sync` command:**
-   - Run the full repost algorithm
-   - Only upon success, perform the delete algorithm on the archived list
+   - Usage: `make sync ARGS="--destination=<channel> --source=<file>"`
+   - Run the full repost algorithm first
+   - Only upon success, perform the delete algorithm using auto-detected `dest_urls_to_delete.txt`
    - Abort on any error
 
 **Implementation Plan:**
 
 1. **Add delete functionality to `src/reposter.py`:**
-   - Create `delete_from_file(list_file=None)` function
-   - Parse URLs from list file (or find most recent `*_old_dest_urls.txt`)
-   - Extract message IDs from URLs
-   - Use Telethon to delete messages
+   - Create `delete_from_file(delete_urls_file=None)` function
+   - Auto-detect most recent `dest_urls_to_delete.txt` if delete_urls_file is None
+   - Parse URLs from list file and extract message IDs and destination channel
+   - Use Telethon to delete messages from destination channel (inferred from URLs)
+   - Stop immediately on any error (like repost operation)
    - Rename file to `{TIMESTAMP}_deleted.txt` on success
 
 2. **Add sync functionality to `src/reposter.py`:**
-   - Create `sync_operation(source, destination, delete_list=None)` function
-   - Run `repost_from_file()` first
-   - On success, run `delete_from_file()` with archived list
+   - Create `sync_operation(destination, source=None)` function
+   - Run `repost_from_file()` first with source and destination
+   - On success, run `delete_from_file()` with auto-detected delete list
    - Handle errors and abort on any failure
 
 3. **Update CLI commands in `src/cli.py`:**
-   - Add `--list` option to delete command
-   - Add proper arguments to sync command
+   - Update `delete()` command: add only `--delete-urls` (optional) option
+   - Update `sync()` command: add `--destination` (required), `--source` (optional) options
    - Connect CLI to new reposter functions
 
 4. **Add tests for new functionality:**
-   - Test delete command with explicit list file
-   - Test delete command with auto-detection of most recent file
-   - Test sync command end-to-end
-   - Test error handling and file operations
+   - Test delete command with explicit delete URLs file
+   - Test delete command with auto-detection of most recent `dest_urls_to_delete.txt`
+   - Test sync command end-to-end with auto-detection
+   - Test error handling and immediate stop on failures
 
 5. **Update Makefile integration:**
-   - Ensure `make delete LIST=file` works
-   - Ensure `make sync SRC=file DEL=file` works
+   - Ensure `make delete ARGS="--delete-urls=<file>"` works
+   - Ensure `make sync ARGS="--destination=<channel> --source=<file>"` works
 
 **Files to modify:**
 - `src/reposter.py` - Add delete and sync functions
-- `src/cli.py` - Update CLI commands
+- `src/cli.py` - Update CLI commands with proper Click options
 - `tests/` - Add new test files for delete and sync functionality
+
+**Design decisions confirmed:**
+1. ✅ Sync command uses auto-detection for delete list (no `--delete-list` option)
+2. ✅ Use `dest_urls_to_delete.txt` naming pattern (not `*_old_dest_urls.txt`)
+3. ✅ Delete operation stops immediately on any error (data integrity first)
 
 The file-driven repost logic is already fully implemented and working:
 
