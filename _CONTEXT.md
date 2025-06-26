@@ -18,12 +18,12 @@ Channel owners often need to mirror content without showing where it came from. 
 
 ## 4  Inputs & Outputs
 
-### Input files (all inside `./temp/input/`)
+### Input files (all inside `./data/input/`)
 
 * `source_urls.txt` – one Telegram message URL per line (private channel)
 * `dest_urls_to_delete.txt` – optional list of message URLs to remove from the public channel
 
-### Output files (inside `./temp/output/`)
+### Output files (inside `./data/output/`)
 
 * `new_dest_urls.txt` – URLs of freshly created messages
 * `{TIMESTAMP}_old_dest_urls.txt` – auto‑archived copy of any pre‑existing `new_dest_urls.txt`
@@ -71,7 +71,7 @@ A single `make sync ARGS="--destination=<channel> --source=<file>"` runs **repos
 1. Determine the list file:
 
    * If `LIST=` arg is given, use it.
-   * Otherwise, pick the most recent `*_old_dest_urls.txt` in `./temp/output/`.
+   * Otherwise, pick the most recent `*_old_dest_urls.txt` in `./data/output/`.
 2. Delete each URL in the file from the public channel.
 3. After the final successful deletion, rename the file to `{TIMESTAMP}_deleted.txt`.
 
@@ -113,3 +113,7 @@ Runs the full **repost** algorithm and, only upon success, performs the **delete
 * Re‑state assumptions in code comments so future maintainers see them without opening this doc.
 * Prefer small, reviewable pull requests and incremental PR descriptions.
 * If uncertain, ask the user for clarification instead of guessing.
+
+**Folder Purpose:**
+- `./data/` — Stores all persistent user-facing input/output files. These files are never deleted automatically and persist between runs for user reference.
+- `./tests/data/` — Used exclusively for unit/integration tests. This folder mimics the structure of `./data/` but is ephemeral and may be deleted after each test run. It ensures test artifacts never interfere with user data.

@@ -19,7 +19,7 @@ Item 11: Delete & sync commands implementation
 
 1. **`make delete` command:**
    - Usage: `make delete ARGS="--delete-urls=<file>"`
-   - If `--delete-urls` not provided, auto-detect most recent `dest_urls_to_delete.txt` in `./temp/output/`
+   - If `--delete-urls` not provided, auto-detect most recent `dest_urls_to_delete.txt` in `./data/output/`
    - Delete each URL in the file from the destination channel (inferred from URLs)
    - After final successful deletion, rename file to `{TIMESTAMP}_deleted.txt`
    - Stop immediately on any error (data integrity first)
@@ -74,9 +74,9 @@ Item 11: Delete & sync commands implementation
 The file-driven repost logic is already fully implemented and working:
 
 1. ✅ **CLI Integration**: `make repost ARGS="--source=file --destination=channel"` command works
-2. ✅ **File Reading**: Reads source URLs from input files (`./temp/input/source_urls.txt`)
+2. ✅ **File Reading**: Reads source URLs from input files (`./data/input/source_urls.txt`)
 3. ✅ **Message Reposting**: Uses Telethon to repost messages to destination channels
-4. ✅ **Output Writing**: Writes new destination URLs to `./temp/output/new_dest_urls.txt`
+4. ✅ **Output Writing**: Writes new destination URLs to `./data/output/new_dest_urls.txt`
 5. ✅ **Atomic Operations**: Uses `os.replace` for atomic file writes
 6. ✅ **Channel Support**: Handles both public and private channels correctly
 7. ✅ **Error Handling**: Proper error handling and exit codes
@@ -84,9 +84,9 @@ The file-driven repost logic is already fully implemented and working:
 9. ✅ **Channel ID Normalization**: Properly converts channel IDs (e.g., 2763892937 → -1002763892937)
 
 **Test Results:**
-- Public → Public: `make repost ARGS="--source=./temp/input/_source_public.txt --destination=dummy_channel991"` ✅
-- Private → Private: `make repost ARGS="--source=./temp/input/_source_private.txt --destination=2763892937"` ✅
-- Output file created: `./temp/output/new_dest_urls.txt` with correct URLs ✅
+- Public → Public: `make repost ARGS="--source=./data/input/_source_public.txt --destination=dummy_channel991"` ✅
+- Private → Private: `make repost ARGS="--source=./data/input/_source_private.txt --destination=2763892937"` ✅
+- Output file created: `./data/output/new_dest_urls.txt` with correct URLs ✅
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -206,7 +206,7 @@ Moving to Item 10: File-driven repost logic implementation.
 2025-06-22: ANALYZE phase completed for Item 10. File-driven repost logic is already fully implemented and functional:
 - CLI command `make repost ARGS="--source=file --destination=channel"` working correctly
 - Successfully tested public→public and private→private reposting scenarios
-- File I/O operations working with atomic writes to `./temp/output/new_dest_urls.txt`
+- File I/O operations working with atomic writes to `./data/output/new_dest_urls.txt`
 - URL parsing and channel ID normalization working correctly
 - All requirements from _CONTEXT.md satisfied
 - Moving to VALIDATE phase to confirm functionality.
@@ -216,7 +216,7 @@ Moving to Item 10: File-driven repost logic implementation.
 - CLI commands tested successfully: public→public and private→private reposting
 - File I/O operations working with atomic writes
 - URL parsing and channel ID normalization working correctly
-- Output files generated correctly in `./temp/output/new_dest_urls.txt`
+- Output files generated correctly in `./data/output/new_dest_urls.txt`
 - All requirements from _CONTEXT.md satisfied
 
 Moving to Item 11: Delete & sync commands implementation.

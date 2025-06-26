@@ -63,10 +63,10 @@ All commands are run via `make` and executed within a Docker container to ensure
 To repost multiple messages, use the new file-based workflow:
 
 **Before you start:**
-- Run `make setup` to create the required temp directories.
+- Run `make setup` to create the required data directories.
 
 1. **Prepare your source URLs file:**
-   - Create a file at `./temp/input/source_urls.txt` (one message URL per line).
+   - Create a file at `./data/input/source_urls.txt` (one message URL per line).
    - Each line should be a full Telegram message URL, e.g.:
      ```
      https://t.me/source_channel/12345
@@ -74,7 +74,7 @@ To repost multiple messages, use the new file-based workflow:
      ```
 
 2. **Run the repost command:**
-   - Use the Makefile target and specify your destination channel. You can also specify a custom source file with the `--source` option (defaults to `./temp/input/source_urls.txt`):
+   - Use the Makefile target and specify your destination channel. You can also specify a custom source file with the `--source` option (defaults to `./data/input/source_urls.txt`):
      ```bash
      make repost ARGS="--destination=<destination_channel>"
      # Or, to use a custom input file:
@@ -83,7 +83,7 @@ To repost multiple messages, use the new file-based workflow:
 
 3. **Check the output:**
    - After completion, new message URLs will be written to:
-     `./temp/output/new_dest_urls.txt`
+     `./data/output/new_dest_urls.txt`
    - Each line corresponds to a reposted message in the destination channel.
 
 ### Other Commands

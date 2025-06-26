@@ -21,11 +21,16 @@ Automate copying every message from a Telegram channel to channel so that the po
 - **Configurable delay** (default: 31 seconds) between sends
 
 ## Critical Patterns & Conventions
+
 - Directory layout:
   ```
-  ./temp/input/   # source_urls.txt, dest_urls_to_delete.txt
-  ./temp/output/  # new_dest_urls.txt, *_old_dest_urls.txt, *_deleted.txt
+  ./data/input/         # User input files (persistent)
+  ./data/output/        # User output files (persistent)
+  ./tests/data/input/   # Test input files (ephemeral, mirrors ./data/input/)
+  ./tests/data/output/  # Test output files (ephemeral, mirrors ./data/output/)
   ```
+  - All files in `./data/` are persistent and user-facing.
+  - All files in `./tests/data/` are temporary and used only for automated tests.
 - **Atomic file writes**: write to a temp file then `os.replace`.
 - **Timestamp format**: `YYYYMMDD_HHMMSS` (24-h; add `_mmm` for ms when needed).
 - CLI commands (`make login | repost | delete | sync`) must be **idempotent** and exit non-zero on any unhandled error.
@@ -57,4 +62,5 @@ Automate copying every message from a Telegram channel to channel so that the po
 - Implemented comprehensive automated tests for file-driven repost logic covering all channel type combinations, URL parsing, error handling, and file I/O operations.
 - Set up GitHub Actions CI to run tests and Docker build.
 - Implemented a containerized smoke test with pytest to ensure basic application integrity.
+
 <!-- The agent prepends the latest summary here as a new list item after each VALIDATE phase -->
