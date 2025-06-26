@@ -26,7 +26,7 @@ login: ## Creates a new session file by logging in.
 	@touch anon.session
 	@docker-compose run --rm reposter python -m src.main login
 
-repost: ## Reposts messages from file. Requires ARGS="--destination=<dest>".
+repost: ## Reposts messages from file. Requires ARGS="--source=<source> --destination=<dest>".
 	@docker-compose run --rm reposter python -m src.main repost $(ARGS)
 
 delete: ## Deletes messages. Pass CLI arguments via the ARGS variable.
