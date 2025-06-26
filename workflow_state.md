@@ -10,6 +10,24 @@ CurrentItem: 11
 Item 10: File-driven repost logic implementation - COMPLETED
 Item 11: Delete & sync commands implementation
 
+**File and Directory Usage Requirements:**
+
+1. **App Code**
+   - All persistent user input files must be read from `./data/input/`.
+   - All persistent user output files must be written to `./data/output/`.
+   - Application code must not read from or write to any files in `./tests/data/`.
+
+2. **Tests Code**
+   - All test input files must be placed in `./tests/data/input/`.
+   - All test output files must be written to `./tests/data/output/`.
+   - Test code must not read from or write to any files in `./data/` (persistent user data).
+   - Tests must not modify or depend on persistent user data.
+   - The structure of `./tests/data/input/` and `./tests/data/output/` must mirror that of `./data/input/` and `./data/output/`.
+   - Tests that check file writing logic must verify atomicity (e.g., by mocking or checking for temp file usage).
+
+3. **General**
+   - Update code comments and docstrings to clarify directory usage and file handling conventions.
+
 **Current Implementation Pattern (from Makefile):**
 - All commands use `make <command> ARGS="--option1=value1 --option2=value2"`
 - CLI commands receive arguments via Click options
