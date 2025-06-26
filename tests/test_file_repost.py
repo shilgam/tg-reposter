@@ -290,7 +290,10 @@ class TestFileIOOperations:
     def test_file_existence_validation(self, temp_dirs, mock_telethon_client):
         """Test file existence and content validation"""
         setup_temp_dirs()
-        # Don't create source file - should fail
+        # Remove the default source file to test non-existence
+        if os.path.exists(SOURCE_FILE):
+            os.remove(SOURCE_FILE)
+
         dest = "@dummy_channel991"
 
         result = run_repost_command(dest)

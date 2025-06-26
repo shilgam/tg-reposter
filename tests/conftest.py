@@ -18,7 +18,8 @@ class MockEntity:
 
 @pytest.fixture(autouse=True)
 def mock_telethon_client():
-    with patch('telethon.TelegramClient', autospec=True) as mock_client_cls:
+    # Mock the DummyClient class that's used in TEST_MODE
+    with patch('src.reposter.DummyClient', autospec=True) as mock_client_cls:
         mock_client = mock_client_cls.return_value
 
         # Mock async context manager
