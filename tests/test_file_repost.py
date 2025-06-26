@@ -1,9 +1,9 @@
 import os
 import shutil
 import pytest
-import subprocess
 import tempfile
 from pathlib import Path
+from src.reposter import repost_from_file
 
 TEMP_INPUT = "./temp/input"
 TEMP_OUTPUT = "./temp/output"
@@ -46,80 +46,50 @@ def read_dest_urls():
             return [line.strip() for line in f if line.strip()]
     return []
 
-def run_repost_command(destination, source_file=None):
-    """Helper to run the repost command"""
-    env = os.environ.copy()
-    env.update({
-        "API_ID": "12345",
-        "API_HASH": "testhash",
-        "TEST_MODE": "1"
-    })
-
-    cmd = ["python", "-m", "src.main", "repost", "--destination", destination]
-    if source_file:
-        cmd.extend(["--source", source_file])
-
-    return subprocess.run(cmd, capture_output=True, env=env)
-
-
+@pytest.mark.asyncio
 class TestChannelTypeCombinations:
     """Test correct reposting for each channel type combination"""
-
-    def test_public_source_to_public_dest(self, temp_dirs, mock_telethon_client):
+    async def test_public_source_to_public_dest(self, temp_dirs, mock_telethon_client):
         """Test public channel to public channel reposting"""
         setup_temp_dirs()
         write_source_urls(["https://t.me/publicsource/4"])
         dest = "@dummy_channel991"
-
-        result = run_repost_command(dest)
-
-        assert result.returncode == 0, f"Command failed: {result.stderr.decode()}"
+        await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
         assert os.path.exists(DEST_FILE)
-
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 1
         assert dest_urls[0].startswith("https://t.me/")
         cleanup_temp_dirs()
 
-    def test_private_source_to_private_dest(self, temp_dirs, mock_telethon_client):
+    async def test_private_source_to_private_dest(self, temp_dirs, mock_telethon_client):
         """Test private channel to private channel reposting"""
         setup_temp_dirs()
         write_source_urls(["https://t.me/c/123456789/1"])
         dest = "2763892937"  # Private channel ID
-
-        result = run_repost_command(dest)
-
-        assert result.returncode == 0, f"Command failed: {result.stderr.decode()}"
+        await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
         assert os.path.exists(DEST_FILE)
-
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 1
         cleanup_temp_dirs()
 
-    def test_public_source_to_private_dest(self, temp_dirs, mock_telethon_client):
+    async def test_public_source_to_private_dest(self, temp_dirs, mock_telethon_client):
         """Test public channel to private channel reposting"""
         setup_temp_dirs()
         write_source_urls(["https://t.me/publicsource/4"])
         dest = "2763892937"  # Private channel ID
-
-        result = run_repost_command(dest)
-
-        assert result.returncode == 0, f"Command failed: {result.stderr.decode()}"
+        await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
         assert os.path.exists(DEST_FILE)
         cleanup_temp_dirs()
 
-    def test_private_source_to_public_dest(self, temp_dirs, mock_telethon_client):
+    async def test_private_source_to_public_dest(self, temp_dirs, mock_telethon_client):
         """Test private channel to public channel reposting"""
         setup_temp_dirs()
         write_source_urls(["https://t.me/c/123456789/1"])
         dest = "@dummy_channel991"
-
-        result = run_repost_command(dest)
-
-        assert result.returncode == 0, f"Command failed: {result.stderr.decode()}"
+        await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
         assert os.path.exists(DEST_FILE)
         cleanup_temp_dirs()
