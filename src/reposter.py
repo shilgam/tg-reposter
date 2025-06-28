@@ -160,9 +160,10 @@ async def repost_from_file(destination, source=None):
                                 # send_file returns a list if multiple files, or a single Message if one file
                                 if not isinstance(sent_msgs, list):
                                     sent_msgs = [sent_msgs]
-                                # Write URLs for each sent message
-                                for sent in sent_msgs:
-                                    new_url = f"https://t.me/{destination}/{sent.id}"
+                                # Write only the first URL for the media group
+                                if sent_msgs:
+                                    first_sent = sent_msgs[0]
+                                    new_url = f"https://t.me/{destination}/{first_sent.id}"
                                     out.write(new_url + "\n")
                                 print(f"Reposted media group {grouped_id} from {channel} to {destination} as {len(sent_msgs)} messages.")
                                 await asyncio.sleep(1/10)
