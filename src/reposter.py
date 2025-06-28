@@ -124,25 +124,10 @@ async def repost_from_file(destination, source=None):
                         # Telethon requires integer IDs for private channels; string usernames work for public channels.
                         # If you use a string for a private channel, message resolution will fail.
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
-                        # Debug: print type and attributes of message_to_send
-                        print(f"[DEBUG] message_to_send type: {type(message_to_send)}", file=sys.stderr)
-                        if hasattr(message_to_send, '__dict__'):
-                            print(f"[DEBUG] message_to_send.__dict__: {message_to_send.__dict__}", file=sys.stderr)
-                        else:
-                            print(f"[DEBUG] message_to_send: {message_to_send}", file=sys.stderr)
-                        # Try to print media info if present
-                        if hasattr(message_to_send, 'media'):
-                            print(f"[DEBUG] message_to_send.media: {message_to_send.media}", file=sys.stderr)
-                        if hasattr(message_to_send, 'document'):
-                            print(f"[DEBUG] message_to_send.document: {message_to_send.document}", file=sys.stderr)
-                        if hasattr(message_to_send, 'photo'):
-                            print(f"[DEBUG] message_to_send.photo: {message_to_send.photo}", file=sys.stderr)
-                        if hasattr(message_to_send, 'media_group_id'):
-                            print(f"[DEBUG] message_to_send.media_group_id: {message_to_send.media_group_id}", file=sys.stderr)
+
                         # --- Media group logic ---
                         grouped_id = getattr(message_to_send, 'grouped_id', None)
                         if grouped_id:
-                            print(f"[DEBUG] Message is part of a media group (grouped_id={grouped_id}), fetching all group messages", file=sys.stderr)
                             # Fetch a wider window of messages around msg_id to ensure all group messages are found
                             fetch_ids = list(range(msg_id - 10, msg_id + 10))
                             group_msgs = await client.get_messages(source_id, ids=fetch_ids)
@@ -153,7 +138,6 @@ async def repost_from_file(destination, source=None):
                                 if hasattr(m, 'media') and m.media:
                                     media_list.append(m.media)
                             if media_list:
-                                print(f"[DEBUG] Sending media group with {len(media_list)} items to {dest_entity}", file=sys.stderr)
                                 # Only the first item can have a caption in Telegram albums
                                 caption = message_to_send.message if hasattr(message_to_send, 'message') else None
                                 sent_msgs = await client.send_file(dest_entity, media_list, caption=caption)
@@ -165,7 +149,7 @@ async def repost_from_file(destination, source=None):
                                     first_sent = sent_msgs[0]
                                     new_url = f"https://t.me/{destination}/{first_sent.id}"
                                     out.write(new_url + "\n")
-                                print(f"Reposted media group {grouped_id} from {channel} to {destination} as {len(sent_msgs)} messages.")
+                                print(f"Reposted media group {grouped_id} from {channel} to {destination}")
                                 await asyncio.sleep(1/10)
                                 continue  # Skip the single-message send below
                         # --- End media group logic ---
