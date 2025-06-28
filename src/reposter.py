@@ -143,11 +143,10 @@ async def repost_from_file(destination, source=None):
                         grouped_id = getattr(message_to_send, 'grouped_id', None)
                         if grouped_id:
                             print(f"[DEBUG] Message is part of a media group (grouped_id={grouped_id}), fetching all group messages", file=sys.stderr)
-                            # Fetch all messages in the group (limit to 10 for safety)
-                            group_msgs = await client.get_messages(source_id, filter=None, min_id=0, max_id=msg_id+1, limit=10)
-                            # Filter messages with the same grouped_id
+                            # Fetch a wider window of messages around msg_id to ensure all group messages are found
+                            fetch_ids = list(range(msg_id - 10, msg_id + 10))
+                            group_msgs = await client.get_messages(source_id, ids=fetch_ids)
                             group_msgs = [m for m in group_msgs if getattr(m, 'grouped_id', None) == grouped_id]
-                            # Sort by message id (Telegram albums are ordered)
                             group_msgs = sorted(group_msgs, key=lambda m: m.id)
                             media_list = []
                             for m in group_msgs:
@@ -155,7 +154,12 @@ async def repost_from_file(destination, source=None):
                                     media_list.append(m.media)
                             if media_list:
                                 print(f"[DEBUG] Sending media group with {len(media_list)} items to {dest_entity}", file=sys.stderr)
-                                sent_msgs = await client.send_media_group(dest_entity, media_list)
+                                # Only the first item can have a caption in Telegram albums
+                                caption = message_to_send.message if hasattr(message_to_send, 'message') else None
+                                sent_msgs = await client.send_file(dest_entity, media_list, caption=caption)
+                                # send_file returns a list if multiple files, or a single Message if one file
+                                if not isinstance(sent_msgs, list):
+                                    sent_msgs = [sent_msgs]
                                 # Write URLs for each sent message
                                 for sent in sent_msgs:
                                     new_url = f"https://t.me/{destination}/{sent.id}"
