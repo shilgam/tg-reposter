@@ -139,6 +139,31 @@ async def repost_from_file(destination, source=None):
                             print(f"[DEBUG] message_to_send.photo: {message_to_send.photo}", file=sys.stderr)
                         if hasattr(message_to_send, 'media_group_id'):
                             print(f"[DEBUG] message_to_send.media_group_id: {message_to_send.media_group_id}", file=sys.stderr)
+                        # --- Media group logic ---
+                        grouped_id = getattr(message_to_send, 'grouped_id', None)
+                        if grouped_id:
+                            print(f"[DEBUG] Message is part of a media group (grouped_id={grouped_id}), fetching all group messages", file=sys.stderr)
+                            # Fetch all messages in the group (limit to 10 for safety)
+                            group_msgs = await client.get_messages(source_id, filter=None, min_id=0, max_id=msg_id+1, limit=10)
+                            # Filter messages with the same grouped_id
+                            group_msgs = [m for m in group_msgs if getattr(m, 'grouped_id', None) == grouped_id]
+                            # Sort by message id (Telegram albums are ordered)
+                            group_msgs = sorted(group_msgs, key=lambda m: m.id)
+                            media_list = []
+                            for m in group_msgs:
+                                if hasattr(m, 'media') and m.media:
+                                    media_list.append(m.media)
+                            if media_list:
+                                print(f"[DEBUG] Sending media group with {len(media_list)} items to {dest_entity}", file=sys.stderr)
+                                sent_msgs = await client.send_media_group(dest_entity, media_list)
+                                # Write URLs for each sent message
+                                for sent in sent_msgs:
+                                    new_url = f"https://t.me/{destination}/{sent.id}"
+                                    out.write(new_url + "\n")
+                                print(f"Reposted media group {grouped_id} from {channel} to {destination} as {len(sent_msgs)} messages.")
+                                await asyncio.sleep(1/10)
+                                continue  # Skip the single-message send below
+                        # --- End media group logic ---
                         if message_to_send:
                             print(f"[DEBUG] Sending message_to_send to {dest_entity}", file=sys.stderr)
                             sent = await client.send_message(dest_entity, message_to_send)
