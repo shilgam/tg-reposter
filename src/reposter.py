@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import asyncio
 
 # Define DummyClient at module level so it can be mocked in tests
 class DummyClient:
@@ -123,11 +124,28 @@ async def repost_from_file(destination, source=None):
                         # Telethon requires integer IDs for private channels; string usernames work for public channels.
                         # If you use a string for a private channel, message resolution will fail.
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
+                        # Debug: print type and attributes of message_to_send
+                        print(f"[DEBUG] message_to_send type: {type(message_to_send)}", file=sys.stderr)
+                        if hasattr(message_to_send, '__dict__'):
+                            print(f"[DEBUG] message_to_send.__dict__: {message_to_send.__dict__}", file=sys.stderr)
+                        else:
+                            print(f"[DEBUG] message_to_send: {message_to_send}", file=sys.stderr)
+                        # Try to print media info if present
+                        if hasattr(message_to_send, 'media'):
+                            print(f"[DEBUG] message_to_send.media: {message_to_send.media}", file=sys.stderr)
+                        if hasattr(message_to_send, 'document'):
+                            print(f"[DEBUG] message_to_send.document: {message_to_send.document}", file=sys.stderr)
+                        if hasattr(message_to_send, 'photo'):
+                            print(f"[DEBUG] message_to_send.photo: {message_to_send.photo}", file=sys.stderr)
+                        if hasattr(message_to_send, 'media_group_id'):
+                            print(f"[DEBUG] message_to_send.media_group_id: {message_to_send.media_group_id}", file=sys.stderr)
                         if message_to_send:
+                            print(f"[DEBUG] Sending message_to_send to {dest_entity}", file=sys.stderr)
                             sent = await client.send_message(dest_entity, message_to_send)
                             new_url = f"https://t.me/{destination}/{sent.id}"
                             out.write(new_url + "\n")
                             print(f"Reposted message {msg_id} from {channel} to {destination} as {new_url}.")
+                            await asyncio.sleep(1/10)  # Wait 40 seconds before sending the next message
                         else:
                             print(f"Could not find message with ID {msg_id} in {channel}.")
                     except Exception as e:
