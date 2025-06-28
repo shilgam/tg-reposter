@@ -10,7 +10,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 - **Language(s):** Python ≥ 3.12 (strict type-hinting)
 - **Framework(s) & Libraries:** Telethon 1.x, Click (CLI), asyncio
-- **Build / Tooling:** Poetry, Ruff, isort, pytest, Make, Docker
+- **Build / Tooling:** Poetry, isort, pytest, Make, Docker
 
 ## Development Workflow
 
@@ -24,36 +24,53 @@ Automate copying every message from a Telegram channel to channel so that the po
 - Preserve Markdown / HTML formatting verbatim
 - Always use Telethon `send_*` methods — never forward
 - **Optionally delete** destination messages supplied via list file
-- **Configurable delay** (default: 31 seconds) between sends
+
+## Workflows & Command Logic
+
+- **Workflows:**
+  - *Human-in-the-loop*:
+    1. Run `make repost ARGS="--destination=<channel>"` to create new posts and verify them.
+    2. Run `make delete` to remove old posts (auto-detects `dest_urls_to_delete.txt`) and verify deletions.
+  - *Fully automatic*:
+    - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error.
+
+- **Command logic:**
+  - `make repost`: Ensure or clear `new_dest_urls.txt` (archive if needed), repost each URL from `source_urls.txt`, appending new URLs. Stop on first error.
+  - `make delete`: Use provided list or latest archive, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`.
+  - `make sync`: Runs `repost` and, if successful, `delete` using the archived list.
 
 ## Critical Patterns & Conventions
 
-- Directory layout:
+- **Directory layout:**
   ```
-  ./data/input/         # User input files (persistent)
-  ./data/output/        # User output files (persistent)
-  ./tests/data/input/   # Test input files (ephemeral, mirrors ./data/input/)
-  ./tests/data/output/  # Test output files (ephemeral, mirrors ./data/output/)
+  ./data/input/         # Persistent user input files
+  ./data/output/        # Persistent user output files
+  ./tests/data/input/   # Ephemeral test input files (mirrors ./data/input/)
+  ./tests/data/output/  # Ephemeral test output files (mirrors ./data/output/)
   ```
-  - All files in `./data/` are persistent and user-facing.
-  - All files in `./tests/data/` are temporary and used only for automated tests.
-- **Atomic file writes**: write to a temp file then `os.replace`.
-- **Timestamp format**: `YYYYMMDD_HHMMSS` (24-h; add `_mmm` for ms when needed).
-- CLI commands (`make login | repost | delete | sync`) must be **idempotent** and exit non-zero on any unhandled error.
-- Coding standards: PEP 8, Ruff rules, black line length = 88, isort-style imports.
-- Async patterns: `async with TelegramClient(...)` for clear lifecycle; catch `FloodWait` and back-off.
-- Secrets never live in code — load via  `.env`.
-- Every new feature ships with unit tests that stub Telegram I/O.
-- Docs avoid tables unless tables are essential.
-- `make delete` defaults to the most-recent `*_old_dest_urls.txt` when `LIST=` is omitted (for easier interactive use).
+  - All files in `./data/` are persistent and user-facing; files in `./tests/data/` are temporary and for automated tests only.
+
+- **Key file roles:**
+  - `source_urls.txt`: input, one Telegram message URL per line (required)
+  - `dest_urls_to_delete.txt`: input, optional, URLs to delete
+  - `new_dest_urls.txt`: output, new message URLs
+  - `{TIMESTAMP}_old_dest_urls.txt`: output, archived previous URLs
+  - `{TIMESTAMP}_deleted.txt`: output, confirms deletions
+
+- **Other conventions:**
+  - Timestamps: `YYYYMMDD_HHMMSS` (24h, optional ms)
+  - CLI commands (`make login | repost | delete | sync`) must be **idempotent** and exit non-zero on any unhandled error.
+  - Coding standards: PEP 8, Ruff rules, black line length = 88, isort-style imports.
+  - Secrets never live in code — load via  `.env`.
+  - Every new feature ships with unit tests that stub Telegram I/O.
+  - Docs avoid tables unless tables are essential.
+  - `make delete` defaults to the most recent `dest_urls_to_delete.txt` when `--delete-urls` is omitted (for easier interactive use). Use `make delete ARGS="--delete-urls=<file>"` to specify a file explicitly.
 
 ## Constraints
 
 - **Rate limits**: respect Telegram's `FloodWait`; default 2 s delay between sends (configurable).
 - **Data integrity**: stop immediately on first failure; never leave partial state.
-- **Security**: keep `*.session` files out of VCS; redact PII in logs.
-- **Compliance**: accommodate channel owners' privacy requirement of stripping original metadata.
-- **No Bot API** – tool must authenticate with a **user session**, never a bot token.
+- **No Bot API** – tool must authenticate with a **user session**, never a bot token
 
 ## Tokenization Settings
 

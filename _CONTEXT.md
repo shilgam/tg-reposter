@@ -1,13 +1,5 @@
 # Telegram Message Copier – Project Context for LLMs
 
-## 1  Project Snapshot
-
-Copy every message from a **private** Telegram channel to a **public** channel as if it were posted fresh––no forwarding trace, no original‑sender metadata. Implemented in Python with the Telethon library and exposed through a thin CLI + Makefile wrapper.
-
-## 2  Why This Exists
-
-Channel owners often need to mirror content without showing where it came from. Doing that manually is tedious and error‑prone. This tool automates the job while letting an operator (or a cron task) decide whether to run steps one‑by‑one or in a single shot.
-
 ## 3  Core Capabilities
 
 * Repost text, captions, single photos, and multi‑photo albums.
@@ -70,8 +62,8 @@ A single `make sync ARGS="--destination=<channel> --source=<file>"` runs **repos
 
 1. Determine the list file:
 
-   * If `LIST=` arg is given, use it.
-   * Otherwise, pick the most recent `*_old_dest_urls.txt` in `./data/output/`.
+   * If `--delete-urls=<file>` arg is given, use it.
+   * Otherwise, pick the most recent `dest_urls_to_delete.txt` in `./data/output/`.
 2. Delete each URL in the file from the public channel.
 3. After the final successful deletion, rename the file to `{TIMESTAMP}_deleted.txt`.
 
