@@ -2,8 +2,8 @@
 _Last updated: 2025-06-29_
 
 ## State
-Phase: BLUEPRINT
-Status: NEEDS_PLAN_APPROVAL
+Phase: VALIDATE
+Status: COMPLETED
 CurrentItem: 12
 
 ## Plan
@@ -200,6 +200,16 @@ Moving to Item 11: Delete & sync commands implementation.
 - User files in ./data/, test files in ./tests/data/
 - No test ever overwrites or deletes user data
 - All requirements from project_config.md satisfied
+
+2025-06-29: CONSTRUCT phase completed for Item 12. Successfully implemented custom sleep interval functionality:
+- Added --sleep CLI option with validation (must be positive number)
+- Created get_sleep_interval() utility with priority: CLI > env var > default (0.1s)
+- Updated repost_from_file() to use dynamic sleep intervals between messages
+- Set REPOST_SLEEP_INTERVAL=0 in docker-compose.ci.yml for test environment
+- Added asyncio.sleep() mocking in test fixtures as backup
+- Created comprehensive test suite with 11 new tests covering all scenarios
+- All 31 tests passing including sleep interval functionality
+- Interface: make repost ARGS="--sleep=30 --destination=<channel>"
 
 ## Workflow History
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->

@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 import os
+import asyncio
 
 class MockMessage:
     def __init__(self, message_id, text="Test message", media=None):
@@ -93,3 +94,9 @@ def test_env():
         "API_HASH": "testhash",
         "TEST_MODE": "1"
     }
+
+@pytest.fixture(autouse=True)
+def mock_asyncio_sleep():
+    """Mock asyncio.sleep to ensure tests run instantly"""
+    with patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+        yield mock_sleep

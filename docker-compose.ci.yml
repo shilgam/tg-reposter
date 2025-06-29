@@ -6,3 +6,4 @@ services:
     command: pytest
     environment:
       - PYTHONPATH=/app
+      - REPOST_SLEEP_INTERVAL=0
