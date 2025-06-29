@@ -113,6 +113,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Refactored file logic to strictly separate user data (./data/) from test data (./tests/data/), ensuring atomic file operations and test isolation.
 - Completed file-driven repost logic implementation with CLI integration, supporting both public and private channels with atomic file operations.
 - Implemented comprehensive automated tests for file-driven repost logic covering all channel type combinations, URL parsing, error handling, and file I/O operations.
 - Set up GitHub Actions CI to run tests and Docker build.
