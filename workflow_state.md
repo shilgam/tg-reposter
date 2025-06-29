@@ -2,8 +2,8 @@
 _Last updated: 2025-06-29_
 
 ## State
-Phase: ANALYZE
-Status: READY
+Phase: BLUEPRINT
+Status: NEEDS_PLAN_APPROVAL
 CurrentItem: 12
 
 ## Plan
@@ -20,6 +20,43 @@ Item 12: Add custom sleep interval to repost command
 - Validate input (must be a positive float or integer).
 - Update help text and documentation for the repost command.
 - Add/adjust tests to verify custom interval logic, default behavior, and environment variable override.
+
+**Implementation Plan:**
+
+1. **Update CLI interface** (`src/main.py` or CLI module):
+   - Add `--sleep` option to repost command with type=float, default=None
+   - Add input validation (must be positive number)
+   - Update help text to document the new option
+
+2. **Create sleep utility function** (`src/utils.py` or new module):
+   - Function `get_sleep_interval(cli_value: Optional[float]) -> float`
+   - Priority: CLI argument > environment variable > default (0.1)
+   - Read `REPOST_SLEEP_INTERVAL` environment variable
+   - Return appropriate sleep value
+
+3. **Update repost logic** (main repost function):
+   - Import and use the sleep utility function
+   - Replace any hardcoded sleep values with dynamic interval
+   - Ensure sleep is applied between each message repost
+
+4. **Update test environment**:
+   - Set `REPOST_SLEEP_INTERVAL=0` in `docker-compose.ci.yml`
+   - Add to `Makefile` test target if needed
+
+5. **Add sleep mocking in tests**:
+   - Create pytest fixture to mock `asyncio.sleep()`
+   - Apply fixture to relevant test functions
+   - Ensure tests run instantly regardless of sleep settings
+
+6. **Add new tests**:
+   - Test CLI argument parsing and validation
+   - Test environment variable override
+   - Test default behavior
+   - Test sleep utility function with various inputs
+
+7. **Run validation**:
+   - Execute `make test` to ensure all tests pass
+   - Manual verification with different sleep values
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
