@@ -14,9 +14,31 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 ## Development Workflow
 
-- All tests must be run using `make test`.
-- The LLM assistant should execute `make test` after each atomic change or sub-step during the CONSTRUCT phase, but only if all necessary fixes for that sub-step are believed to be in place and all tests are expected to pass.
-- If tests fail, the assistant must analyze the failures, explain the root cause, and suggest appropriate fixes before continuing.
+### LLM Assistant Step-by-Step Instructions
+
+1. **After each atomic code change:**
+   - Assess if current sub-step is complete and tests should pass.
+   - If fixes are still missing, continue working—don't run tests prematurely.
+
+2. **When code is ready:**
+   - Run `make test`.
+   - If tests fail: analyze output, propose solutions, ask user to choose, then repeat from step 2.
+   - If tests pass: proceed to step 3.
+
+3. **Real account verification:**
+   - Use saved `${DEST_CHANNEL_ID}` or prompt user if needed.
+   - Execute verification commands sequentially (example):
+     ```
+     make repost ARGS="--source=./temp/input/_source_private.txt --destination=${DEST_CHANNEL_ID}"
+     ```
+   - For each command: analyze output for errors.
+   - If errors found: propose solutions, ask user to choose, then repeat from step 2.
+   - Only proceed to next phase if all commands succeed.
+
+**Notes:**
+- Verification command list must be explicitly defined and can be extended.
+- Repeat all steps after every fix until both test and verification stages pass.
+- Require explicit user approval before proceeding to next phase.
 
 ## Core Capabilities
 
