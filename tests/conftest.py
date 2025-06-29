@@ -71,8 +71,8 @@ def mock_telethon_client():
 @pytest.fixture
 def temp_dirs():
     """Create and cleanup temporary test directories"""
-    temp_input = "./temp/input"
-    temp_output = "./temp/output"
+    temp_input = "./tests/data/input"
+    temp_output = "./tests/data/output"
 
     # Create directories
     os.makedirs(temp_input, exist_ok=True)

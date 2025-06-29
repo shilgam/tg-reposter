@@ -39,7 +39,7 @@ Automate copying every message from a Telegram channel to channel so that the po
    - Use saved `${DEST_CHANNEL_ID}` or prompt user if needed.
    - Execute verification commands sequentially (example):
      ```
-     make repost ARGS="--source=./temp/input/_source_private.txt --destination=${DEST_CHANNEL_ID}"
+     make repost ARGS="--source=./temp/input/_source_private.txt --destination=2763892937"
      ```
    - For each command: analyze output for errors.
    - If errors found: propose solutions, ask user to choose, then repeat from step 2.

@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import inspect
 
 # Define DummyClient at module level so it can be mocked in tests
 class DummyClient:
@@ -28,6 +29,20 @@ else:
 
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
+
+def is_running_tests():
+    # Detect if running under pytest or test framework
+    for frame in inspect.stack():
+        if 'pytest' in frame.filename or 'unittest' in frame.filename:
+            return True
+    return False
+
+# Directory selection helper
+def get_data_dirs():
+    if TEST_MODE or is_running_tests():
+        return "./tests/data/input", "./tests/data/output"
+    else:
+        return "./data/input", "./data/output"
 
 # Helper to parse Telegram message URLs
 def parse_telegram_url(url):
@@ -66,8 +81,9 @@ async def login():
 async def repost_from_file(destination, source=None):
     """Reads source message URLs from file and reposts them to the destination channel. Writes new message URLs to output file atomically."""
     session_name = "anon"
-    input_file = source or "./temp/input/source_urls.txt"
-    output_dir = "./temp/output"
+    # Directory logic: use ./data/ for user, ./tests/data/ for tests
+    input_dir, output_dir = get_data_dirs()
+    input_file = source or os.path.join(input_dir, "source_urls.txt")
     output_file = os.path.join(output_dir, "new_dest_urls.txt")
     temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
 
@@ -87,13 +103,9 @@ async def repost_from_file(destination, source=None):
         try:
             destination_id = normalize_channel_id(destination)
             try:
-                # Try to convert destination_id to int if possible (required for private channels)
                 destination_id = int(destination_id)
             except (ValueError, TypeError):
-                # If conversion fails, keep as string (works for public channels/usernames)
                 pass
-            # Telethon requires integer IDs for private channels; string usernames work for public channels.
-            # If you use a string for a private channel, entity resolution will fail.
             try:
                 dest_entity = await client.get_entity(destination_id)
             except Exception as e1:
@@ -115,13 +127,9 @@ async def repost_from_file(destination, source=None):
                     try:
                         source_id = normalize_channel_id(channel)
                         try:
-                            # Try to convert source_id to int if possible (required for private channels)
                             source_id = int(source_id)
                         except (ValueError, TypeError):
-                            # If conversion fails, keep as string (works for public channels/usernames)
                             pass
-                        # Telethon requires integer IDs for private channels; string usernames work for public channels.
-                        # If you use a string for a private channel, message resolution will fail.
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity, message_to_send)
