@@ -1,5 +1,5 @@
 # workflow_state.md
-_Last updated: 2025-06-22_
+_Last updated: 2025-06-29_
 
 ## State
 Phase: ANALYZE
@@ -8,103 +8,16 @@ CurrentItem: 11
 
 ## Plan
 Item 10: File-driven repost logic implementation - COMPLETED
-Item 11: Delete & sync commands implementation
+Item 11: Refactor file logic for test/user data separation
 
-**File and Directory Usage Requirements:**
+**Refactor: Ensure test isolation and user data safety**
 
-1. **App Code**
-   - All persistent user input files must be read from `./data/input/`.
-   - All persistent user output files must be written to `./data/output/`.
-   - Application code must not read from or write to any files in `./tests/data/`.
-
-2. **Tests Code**
-   - All test input files must be placed in `./tests/data/input/`.
-   - All test output files must be written to `./tests/data/output/`.
-   - Test code must not read from or write to any files in `./data/` (persistent user data).
-   - Tests must not modify or depend on persistent user data.
-   - The structure of `./tests/data/input/` and `./tests/data/output/` must mirror that of `./data/input/` and `./data/output/`.
-   - Tests that check file writing logic must verify atomicity (e.g., by mocking or checking for temp file usage).
-
-3. **General**
-   - Update code comments and docstrings to clarify directory usage and file handling conventions.
-
-**Current Implementation Pattern (from Makefile):**
-- All commands use `make <command> ARGS="--option1=value1 --option2=value2"`
-- CLI commands receive arguments via Click options
-- Commands run in Docker container via `docker-compose run --rm reposter`
-
-**Requirements from _CONTEXT.md (updated for current pattern):**
-
-1. **`make delete` command:**
-   - Usage: `make delete ARGS="--delete-urls=<file>"`
-   - If `--delete-urls` not provided, auto-detect most recent `dest_urls_to_delete.txt` in `./data/output/`
-   - Delete each URL in the file from the destination channel (inferred from URLs)
-   - After final successful deletion, rename file to `{TIMESTAMP}_deleted.txt`
-   - Stop immediately on any error (data integrity first)
-
-2. **`make sync` command:**
-   - Usage: `make sync ARGS="--destination=<channel> --source=<file>"`
-   - Run the full repost algorithm first
-   - Only upon success, perform the delete algorithm using auto-detected `dest_urls_to_delete.txt`
-   - Abort on any error
-
-**Implementation Plan:**
-
-1. **Add delete functionality to `src/reposter.py`:**
-   - Create `delete_from_file(delete_urls_file=None)` function
-   - Auto-detect most recent `dest_urls_to_delete.txt` if delete_urls_file is None
-   - Parse URLs from list file and extract message IDs and destination channel
-   - Use Telethon to delete messages from destination channel (inferred from URLs)
-   - Stop immediately on any error (like repost operation)
-   - Rename file to `{TIMESTAMP}_deleted.txt` on success
-
-2. **Add sync functionality to `src/reposter.py`:**
-   - Create `sync_operation(destination, source=None)` function
-   - Run `repost_from_file()` first with source and destination
-   - On success, run `delete_from_file()` with auto-detected delete list
-   - Handle errors and abort on any failure
-
-3. **Update CLI commands in `src/cli.py`:**
-   - Update `delete()` command: add only `--delete-urls` (optional) option
-   - Update `sync()` command: add `--destination` (required), `--source` (optional) options
-   - Connect CLI to new reposter functions
-
-4. **Add tests for new functionality:**
-   - Test delete command with explicit delete URLs file
-   - Test delete command with auto-detection of most recent `dest_urls_to_delete.txt`
-   - Test sync command end-to-end with auto-detection
-   - Test error handling and immediate stop on failures
-
-5. **Update Makefile integration:**
-   - Ensure `make delete ARGS="--delete-urls=<file>"` works
-   - Ensure `make sync ARGS="--destination=<channel> --source=<file>"` works
-
-**Files to modify:**
-- `src/reposter.py` - Add delete and sync functions
-- `src/cli.py` - Update CLI commands with proper Click options
-- `tests/` - Add new test files for delete and sync functionality
-
-**Design decisions confirmed:**
-1. ✅ Sync command uses auto-detection for delete list (no `--delete-list` option)
-2. ✅ Use `dest_urls_to_delete.txt` naming pattern (not `*_old_dest_urls.txt`)
-3. ✅ Delete operation stops immediately on any error (data integrity first)
-
-The file-driven repost logic is already fully implemented and working:
-
-1. ✅ **CLI Integration**: `make repost ARGS="--source=file --destination=channel"` command works
-2. ✅ **File Reading**: Reads source URLs from input files (`./data/input/source_urls.txt`)
-3. ✅ **Message Reposting**: Uses Telethon to repost messages to destination channels
-4. ✅ **Output Writing**: Writes new destination URLs to `./data/output/new_dest_urls.txt`
-5. ✅ **Atomic Operations**: Uses `os.replace` for atomic file writes
-6. ✅ **Channel Support**: Handles both public and private channels correctly
-7. ✅ **Error Handling**: Proper error handling and exit codes
-8. ✅ **URL Parsing**: Correctly parses Telegram URLs for both public and private channels
-9. ✅ **Channel ID Normalization**: Properly converts channel IDs (e.g., 2763892937 → -1002763892937)
-
-**Test Results:**
-- Public → Public: `make repost ARGS="--source=./data/input/_source_public.txt --destination=dummy_channel991"` ✅
-- Private → Private: `make repost ARGS="--source=./data/input/_source_private.txt --destination=2763892937"` ✅
-- Output file created: `./data/output/new_dest_urls.txt` with correct URLs ✅
+- Refactor file handling logic to:
+  - Use atomic file renaming (os.replace) for all file moves and writes.
+  - Store all user-generated files in the `./data/` directory.
+  - Store all test-generated files in a separate `./tests/data/` directory.
+  - Ensure that running tests never overwrites, deletes, or interferes with user data files.
+  - Update tests and file paths accordingly to maintain strict separation between user and test data.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -202,11 +115,13 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | done |
 | 9  | **Basic automated tests for file-driven repost logic** — add tests for all channel type combinations, type/value/URL assertions, and error handling | done |
 | 10 | **File-driven repost logic** — read source URLs, repost, and write destination URLs | done |
-| 11 | **Delete & sync commands** — implement `delete` and `sync` commands per `_CONTEXT.md` | pending |
-| 12 | **Robust logging & error handling** — add logging and exit on first error | pending |
-| 13 | **Comprehensive unit tests** — add unit tests with mocked Telethon, aim for 90% coverage | pending |
-| 14 | **Documentation pass** — expand `README.md` with usage instructions and badges | pending |
-| 15 | **Automation for green tests** — enforce passing CI via branch protection rules | pending |
+| 11 | **Refactor file logic for test/user data separation** | pending |
+| 12 | **Add custom sleep interval to repost command** | pending |
+| 13 | **Add delete command with CLI and Makefile support** | pending |
+| 14 | **Add sync (repost + delete) command with CLI/Makefile** | pending |
+| 15 | **Repost all attachments from Telegram albums** | pending |
+| 16 | **Output only first media group link to file** | pending |
+| 17 | **Resend messages with multiple media files** | pending |
 
 ## Log
 2025-06-22: VALIDATE phase completed for Item 9. All 20 tests passing in Docker environment. Test coverage includes:
