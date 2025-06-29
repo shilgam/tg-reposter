@@ -17,8 +17,9 @@ PRIVATE_CHANNEL_ID_FROM_URL = -100123456789
 MESSAGE_ID = 123
 DEST_MESSAGE_ID = 12345
 
-TEMP_INPUT = "./temp/input"
-TEMP_OUTPUT = "./temp/output"
+# Use ./tests/data/ for all test files
+TEMP_INPUT = "./tests/data/input"
+TEMP_OUTPUT = "./tests/data/output"
 SOURCE_FILE = os.path.join(TEMP_INPUT, "source_urls.txt")
 DEST_FILE = os.path.join(TEMP_OUTPUT, "new_dest_urls.txt")
 
