@@ -2,22 +2,24 @@
 _Last updated: 2025-06-29_
 
 ## State
-Phase: VALIDATE
-Status: COMPLETED
-CurrentItem: 11
+Phase: ANALYZE
+Status: READY
+CurrentItem: 12
 
 ## Plan
 Item 10: File-driven repost logic implementation - COMPLETED
 Item 11: Refactor file logic for test/user data separation
+Item 12: Add custom sleep interval to repost command
 
-**Refactor: Ensure test isolation and user data safety**
-
-- Refactor file handling logic to:
-  - Use atomic file renaming (os.replace) for all file moves and writes.
-  - Store all user-generated files in the `./data/` directory.
-  - Store all test-generated files in a separate `./tests/data/` directory.
-  - Ensure that running tests never overwrites, deletes, or interferes with user data files.
-  - Update tests and file paths accordingly to maintain strict separation between user and test data.
+**Requirements summary:**
+- Allow user to specify a custom sleep interval (in seconds) between reposted messages via CLI argument `--sleep=N` (e.g., `make repost ARGS="--sleep=30 --destination=<channel>"`).
+- Default to 0.1 seconds if not specified.
+- Override default sleep during tests using environment variable `REPOST_SLEEP_INTERVAL=0` in CI/test environment.
+- Mock `asyncio.sleep()` in test fixtures as backup to ensure tests run instantly.
+- Ensure the interval is respected for all repost operations, including batch and album reposts.
+- Validate input (must be a positive float or integer).
+- Update help text and documentation for the repost command.
+- Add/adjust tests to verify custom interval logic, default behavior, and environment variable override.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
