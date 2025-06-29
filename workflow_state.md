@@ -4,20 +4,12 @@ _Last updated: 2025-06-29_
 ## State
 Phase: VALIDATE
 Status: COMPLETED
-CurrentItem: 11
+CurrentItem: 12
 
 ## Plan
 Item 10: File-driven repost logic implementation - COMPLETED
-Item 11: Refactor file logic for test/user data separation
-
-**Refactor: Ensure test isolation and user data safety**
-
-- Refactor file handling logic to:
-  - Use atomic file renaming (os.replace) for all file moves and writes.
-  - Store all user-generated files in the `./data/` directory.
-  - Store all test-generated files in a separate `./tests/data/` directory.
-  - Ensure that running tests never overwrites, deletes, or interferes with user data files.
-  - Update tests and file paths accordingly to maintain strict separation between user and test data.
+Item 11: Refactor file logic for test/user data separation - COMPLETED
+Item 12: Add custom sleep interval to repost command - COMPLETED
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -115,8 +107,8 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 8  | **CLI skeleton (Click)** — wrap PoC in `click` (`repost`, `delete`, `sync`) | done |
 | 9  | **Basic automated tests for file-driven repost logic** — add tests for all channel type combinations, type/value/URL assertions, and error handling | done |
 | 10 | **File-driven repost logic** — read source URLs, repost, and write destination URLs | done |
-| 11 | **Refactor file logic for test/user data separation** | pending |
-| 12 | **Add custom sleep interval to repost command** | pending |
+| 11 | **Refactor file logic for test/user data separation** | done |
+| 12 | **Add custom sleep interval to repost command** | done |
 | 13 | **Add delete command with CLI and Makefile support** | pending |
 | 14 | **Add sync (repost + delete) command with CLI/Makefile** | pending |
 | 15 | **Repost all attachments from Telegram albums** | pending |
@@ -161,6 +153,16 @@ Moving to Item 11: Delete & sync commands implementation.
 - User files in ./data/, test files in ./tests/data/
 - No test ever overwrites or deletes user data
 - All requirements from project_config.md satisfied
+
+2025-06-29: CONSTRUCT phase completed for Item 12. Successfully implemented custom sleep interval functionality:
+- Added --sleep CLI option with validation (must be positive number)
+- Created get_sleep_interval() utility with priority: CLI > env var > default (0.1s)
+- Updated repost_from_file() to use dynamic sleep intervals between messages
+- Set REPOST_SLEEP_INTERVAL=0 in docker-compose.ci.yml for test environment
+- Added asyncio.sleep() mocking in test fixtures as backup
+- Created comprehensive test suite with 11 new tests covering all scenarios
+- All 31 tests passing including sleep interval functionality
+- Interface: make repost ARGS="--sleep=30 --destination=<channel>"
 
 ## Workflow History
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->

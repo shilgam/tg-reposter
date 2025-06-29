@@ -2,6 +2,8 @@ import os
 import re
 import sys
 import inspect
+import asyncio
+from typing import Optional
 
 # Define DummyClient at module level so it can be mocked in tests
 class DummyClient:
@@ -64,6 +66,20 @@ def normalize_channel_id(channel):
         return f'-100{channel}'
     return channel
 
+def get_sleep_interval(cli_value: Optional[float]) -> float:
+    """Get sleep interval with priority: CLI argument > environment variable > default (0.1)"""
+    if cli_value is not None:
+        return cli_value
+
+    env_value = os.environ.get("REPOST_SLEEP_INTERVAL")
+    if env_value is not None:
+        try:
+            return float(env_value)
+        except (ValueError, TypeError):
+            pass
+
+    return 0.1  # Default value
+
 async def login():
     """Connects to Telegram and creates a session file if one doesn't exist."""
     print("Attempting to connect to Telegram to create a session...", file=sys.stderr)
@@ -78,7 +94,7 @@ async def login():
             print("Login successful. Session file created/updated.")
 
 
-async def repost_from_file(destination, source=None):
+async def repost_from_file(destination, source=None, sleep_interval=None):
     """Reads source message URLs from file and reposts them to the destination channel. Writes new message URLs to output file atomically."""
     session_name = "anon"
     # Directory logic: use ./data/ for user, ./tests/data/ for tests
@@ -86,6 +102,9 @@ async def repost_from_file(destination, source=None):
     input_file = source or os.path.join(input_dir, "source_urls.txt")
     output_file = os.path.join(output_dir, "new_dest_urls.txt")
     temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
+
+    # Get the actual sleep interval to use
+    sleep_time = get_sleep_interval(sleep_interval)
 
     if not os.path.exists(input_file):
         print(f"Input file {input_file} does not exist.", file=sys.stderr)
@@ -97,6 +116,7 @@ async def repost_from_file(destination, source=None):
         source_urls = [line.strip() for line in f if line.strip()]
 
     print(f"Read {len(source_urls)} source URLs from {input_file}.", file=sys.stderr)
+    print(f"Using sleep interval: {sleep_time} seconds between reposts.", file=sys.stderr)
 
     any_invalid = False
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
@@ -121,7 +141,7 @@ async def repost_from_file(destination, source=None):
             sys.exit(1)
 
         with open(temp_file, "w", encoding="utf-8") as out:
-            for url in source_urls:
+            for i, url in enumerate(source_urls):
                 channel, msg_id = parse_telegram_url(url)
                 if channel and msg_id:
                     try:
@@ -136,6 +156,10 @@ async def repost_from_file(destination, source=None):
                             new_url = f"https://t.me/{destination}/{sent.id}"
                             out.write(new_url + "\n")
                             print(f"Reposted message {msg_id} from {channel} to {destination} as {new_url}.")
+
+                            # Sleep between messages, but not after the last one
+                            if i < len(source_urls) - 1:
+                                await asyncio.sleep(sleep_time)
                         else:
                             print(f"Could not find message with ID {msg_id} in {channel}.")
                     except Exception as e:

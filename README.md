@@ -74,11 +74,13 @@ To repost multiple messages, use the new file-based workflow:
      ```
 
 2. **Run the repost command:**
-   - Use the Makefile target and specify your destination channel. You can also specify a custom source file with the `--source` option (defaults to `./data/input/source_urls.txt`):
+   - Use the Makefile target and specify your destination channel and sleep interval in seconds (default: 0.1). You can also specify a custom source file with the `--source` option (defaults to `./data/input/source_urls.txt`):
      ```bash
-     make repost ARGS="--destination=<destination_channel>"
+     make repost ARGS="--sleep=2 --destination=<destination_channel>"
      # Or, to use a custom input file:
-     make repost ARGS="--source=./path/to/your_input.txt --destination=<destination_channel>"
+     make repost ARGS="--sleep=2 --source=./path/to/your_input.txt --destination=<destination_channel>"
+     # For faster testing (no delay between messages):
+     make repost ARGS="--sleep=0 --destination=<destination_channel>"
      ```
 
 3. **Check the output:**
@@ -89,5 +91,5 @@ To repost multiple messages, use the new file-based workflow:
 ### Other Commands
 
 *   `make delete ARGS="--delete-urls=<file>"`: Deletes messages from a list of URLs. If no file is specified, auto-detects the most recent `dest_urls_to_delete.txt` file.
-*   `make sync ARGS="--destination=<channel> --source=<file>"`: Runs repost then delete operations sequentially.
+*   `make sync ARGS="--sleep=2 --destination=<channel> --source=<file>"`: Runs repost then delete operations sequentially (sleep in seconds).
 *   `make login`: Creates a new session file by logging in to Telegram.
