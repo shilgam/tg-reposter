@@ -20,10 +20,20 @@ Automate copying every message from a Telegram channel to channel so that the po
    - Assess if current sub-step is complete and tests should pass.
    - If fixes are still missing, continue working—don't run tests prematurely.
 
-2. **When code is ready:**
+2. **When you believe the code is ready:**
    - Run `make test`.
-   - If tests fail: analyze output, propose solutions, ask user to choose, then repeat from step 2.
-   - If tests pass: proceed to step 3.
+   - **Analyze the test output carefully:**
+     - Look for keywords: "FAILED", "ERROR", "FAIL", "AssertionError", "SystemExit"
+     - If any tests show "FAILED" status, the tests have failed
+     - Read the error messages and stack traces completely
+     - Identify the root cause of each failure
+   - If tests fail:
+     - Analyze each failure's root cause using the Test Failure Analysis Protocol below
+     - Propose specific solutions for each identified issue
+     - Ask user to choose the best approach
+     - Implement the chosen solution
+     - Repeat from step 2 (run tests again)
+   - If ALL tests pass (no "FAILED" entries): proceed to step 3.
 
 3. **Real account verification:**
    - Use saved `${DEST_CHANNEL_ID}` or prompt user if needed.
