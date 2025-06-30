@@ -20,7 +20,7 @@ class TestDeleteFromFile:
             for url in urls:
                 f.write(f"{url}\n")
         # Call the delete function
-        delete_from_file(DELETE_FILE)
+        await delete_from_file(DELETE_FILE)
         # Check that delete_messages was called for each message
         assert mock_telethon_client.delete_messages.call_count == len(urls)
         # Check that the file was renamed to *_deleted.txt
@@ -28,4 +28,4 @@ class TestDeleteFromFile:
         assert len(deleted_files) == 1
         # Clean up
         for f in deleted_files:
-            os.remove(f) 
+            os.remove(f)

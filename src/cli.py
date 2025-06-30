@@ -39,7 +39,7 @@ def login():
 def delete(delete_urls):
     """Deletes messages from the destination channel based on a list."""
     click.echo(f"Deleting messages using file: {delete_urls or '[auto-detect]'}...")
-    delete_from_file(delete_urls)
+    asyncio.run(delete_from_file(delete_urls))
     click.echo("Delete command finished.")
 
 

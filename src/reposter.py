@@ -21,6 +21,7 @@ class DummyClient:
         class DummyMsg: pass
         return DummyMsg()
     async def is_user_authorized(self): return True
+    async def delete_messages(self, *a, **kw): return None
 
 TEST_MODE = os.environ.get("TEST_MODE") == "1"
 
