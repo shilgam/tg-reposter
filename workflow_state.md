@@ -10,6 +10,19 @@ CurrentItem: 12
 Item 10: File-driven repost logic implementation - COMPLETED
 Item 11: Refactor file logic for test/user data separation - COMPLETED
 Item 12: Add custom sleep interval to repost command - COMPLETED
+Item 13: Add delete command with CLI and Makefile support
+
+- Implement `delete_from_file(delete_urls_file=None)` function in `src/delete.py`
+- If `delete_urls_file` is None, auto-detect the most recent `dest_urls_to_delete.txt` in `./data/output/`
+- Parse URLs, extract message IDs and destination channel using existing URL parsing logic
+- Use Telethon to delete messages from the destination channel
+- Stop immediately on any error (data integrity first)
+- On success, rename the processed file to `{TIMESTAMP}_deleted.txt`
+- Update CLI `delete` command in `src/cli.py` with `--delete-urls` optional parameter
+- Connect CLI to `delete_from_file()` function
+- Add comprehensive tests for delete functionality
+- Ensure Makefile integration works: `make delete ARGS="--delete-urls=<file>"` and `make delete` (auto-detect)
+- Update documentation (`README.md`, `project_config.md`, `workflow_state.md`) and usage examples as needed
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
