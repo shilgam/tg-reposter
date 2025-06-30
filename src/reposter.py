@@ -104,6 +104,9 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
     output_file = os.path.join(output_dir, "new_dest_urls.txt")
     temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
 
+    # Normalize destination for all downstream logic
+    normalized_destination = str(normalize_channel_id(destination))
+
     # Get the actual sleep interval to use
     sleep_time = get_sleep_interval(sleep_interval)
 
@@ -122,7 +125,7 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
     any_invalid = False
     async with TelegramClient(session_name, API_ID, API_HASH) as client:
         try:
-            destination_id = normalize_channel_id(destination)
+            destination_id = normalized_destination
             try:
                 destination_id = int(destination_id)
             except (ValueError, TypeError):
@@ -154,9 +157,13 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
                         if message_to_send:
                             sent = await client.send_message(dest_entity, message_to_send)
-                            new_url = f"https://t.me/{destination}/{sent.id}"
-                            out.write(new_url + "\n")
-                            print(f"Reposted message {msg_id} from {channel} to {destination} as {new_url}.")
+                            # Format destination URL correctly for private/public channels
+                            if normalized_destination.startswith("-100"):
+                                dest_url = f"https://t.me/c/{normalized_destination[4:]}/{sent.id}"
+                            else:
+                                dest_url = f"https://t.me/{normalized_destination}/{sent.id}"
+                            out.write(dest_url + "\n")
+                            print(f"Reposted message {msg_id} from {channel} to {normalized_destination} as {dest_url}.")
 
                             # Sleep between messages, but not after the last one
                             if i < len(source_urls) - 1:
