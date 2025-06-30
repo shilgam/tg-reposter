@@ -26,7 +26,7 @@ Item 12: Add custom sleep interval to repost command - COMPLETED
 ### [PHASE: CONSTRUCT]
 1. Follow the approved **## Plan** exactly.
 2. After each atomic change:
-   - run test / linter commands specified in `project_config.md`
+   - strictly follow the "## Development Workflow" in **project_config.md**
    - capture tool output in **## Log**
 3. On success of all steps, set `Phase = VALIDATE`.
 
