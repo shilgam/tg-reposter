@@ -3,6 +3,7 @@ import asyncio
 import click
 
 from .reposter import login as perform_login, repost_from_file
+from .delete import delete_from_file
 
 
 @click.group()
@@ -34,9 +35,12 @@ def login():
 
 
 @cli.command()
-def delete():
+@click.option("--delete-urls", required=False, default=None, help="File with message URLs to delete. If omitted, auto-detects the most recent dest_urls_to_delete.txt in ./data/output/.")
+def delete(delete_urls):
     """Deletes messages from the destination channel based on a list."""
-    click.echo("Delete command is not yet implemented.")
+    click.echo(f"Deleting messages using file: {delete_urls or '[auto-detect]'}...")
+    delete_from_file(delete_urls)
+    click.echo("Delete command finished.")
 
 
 @cli.command()
