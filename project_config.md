@@ -59,13 +59,15 @@ Automate copying every message from a Telegram channel to channel so that the po
 3. **Real account verification:**
    - Execute verification commands sequentially (example):
      ```
-     make repost ARGS="--source=./temp/input/_source_private.txt --destination=2763892937"
+     make repost ARGS="--source=./data/input/_source_private.txt --destination=2763892937"
      make delete
      # list can be extended
      ```
    - For each command: analyze output for errors.
    - If errors found: propose solutions, ask user to choose, then repeat from step 2.
+     - If no errors - proceed to next list item
    - Only proceed to next phase if all commands succeed.
+     - If no errors - proceed to proceed to step 4.
 
 4. Trigger **RULE_GIT_COMMIT_01** to prompt for version control
 
