@@ -95,6 +95,7 @@ Automate copying every message from a Telegram channel to channel so that the po
   - Coding standards: PEP 8, Ruff rules, black line length = 88, isort-style imports.
   - Secrets never live in code — load via  `.env`.
   - Every new feature ships with unit tests that stub Telegram I/O.
+  - Unit tests use nested classes to organize by functional area.
   - Docs avoid tables unless tables are essential.
   - `make delete` defaults to the most recent `dest_urls_to_delete.txt` when `--delete-urls` is omitted (for easier interactive use). Use `make delete ARGS="--delete-urls=<file>"` to specify a file explicitly.
 
