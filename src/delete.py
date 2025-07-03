@@ -16,7 +16,7 @@ from .reposter import (
 async def delete_from_file(delete_urls_file: Optional[str] = None) -> None:
     """
     Async: Delete Telegram messages listed in the given file. If no file is provided,
-    use ./data/output/new_dest_urls.txt by default.
+    auto-detect the most recent dest_urls_to_delete.txt in the output directory.
     Parses URLs, extracts message IDs and destination channel, and deletes messages via Telethon.
     Stops immediately on any error to ensure data integrity. On success, renames the processed file
     to {TIMESTAMP}_deleted.txt.

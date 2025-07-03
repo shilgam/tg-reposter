@@ -16,7 +16,7 @@ MESSAGE_ID = 123
 
 TEMP_INPUT = "./tests/data/input"
 TEMP_OUTPUT = "./tests/data/output"
-DELETE_FILE = os.path.join(TEMP_OUTPUT, "dest_urls_to_delete.txt")
+DELETE_FILE = os.path.join(TEMP_OUTPUT, "new_dest_urls.txt")
 
 class TestDeleteFromFile:
     """Main test suite for delete_from_file functionality"""
@@ -44,10 +44,10 @@ class TestDeleteFromFile:
         async def test_auto_detect_with_no_files(self, temp_dirs, mock_telethon_client):
             """Test auto-detection when no files exist"""
             # Ensure output directory is empty
-            for f in Path(TEMP_OUTPUT).glob("dest_urls_to_delete.txt"):
+            for f in Path(TEMP_OUTPUT).glob("new_dest_urls.txt"):
                 f.unlink()
 
-            with pytest.raises(FileNotFoundError, match="No dest_urls_to_delete.txt found in ./tests/data/output/."):
+            with pytest.raises(FileNotFoundError, match="No new_dest_urls.txt found in ./tests/data/output/."):
                 await delete_from_file(None)
 
         @pytest.mark.asyncio
@@ -57,17 +57,17 @@ class TestDeleteFromFile:
             import time
 
             # Older file
-            older_file = Path(TEMP_OUTPUT) / "dest_urls_to_delete_old.txt"
+            older_file = Path(TEMP_OUTPUT) / "new_dest_urls_old.txt"
             older_file.write_text("https://t.me/old/1\n")
             older_time = time.time() - 3600  # 1 hour ago
             os.utime(older_file, (older_time, older_time))
 
             # Newer file
-            newer_file = Path(TEMP_OUTPUT) / "dest_urls_to_delete_new.txt"
+            newer_file = Path(TEMP_OUTPUT) / "new_dest_urls_new.txt"
             newer_file.write_text("https://t.me/new/1\n")
 
-            # The current implementation only detects dest_urls_to_delete.txt, so this should raise FileNotFoundError
-            with pytest.raises(FileNotFoundError, match="No dest_urls_to_delete.txt found in ./tests/data/output/."):
+            # The current implementation only detects new_dest_urls.txt, so this should raise FileNotFoundError
+            with pytest.raises(FileNotFoundError, match="No new_dest_urls.txt found in ./tests/data/output/."):
                 await delete_from_file(None)
 
     class TestURLParsing:
@@ -269,7 +269,7 @@ class TestDeleteFromFile:
             subdir = Path(TEMP_OUTPUT) / "custom" / "subdir"
             subdir.mkdir(parents=True, exist_ok=True)
 
-            custom_delete_file = subdir / "dest_urls_to_delete.txt"
+            custom_delete_file = subdir / "new_dest_urls.txt"
             urls = [f"https://t.me/channel/{MESSAGE_ID}"]
 
             with open(custom_delete_file, "w") as f:
@@ -326,4 +326,4 @@ class TestDeleteFromFile:
             # Should have non-zero exit code due to error
             assert result.exit_code != 0
             # Should contain error information
-            assert "No dest_urls_to_delete.txt found in ./tests/data/output/." in result.output or "Error" in result.output
+            assert "No new_dest_urls.txt found in ./tests/data/output/." in result.output or "Error" in result.output
