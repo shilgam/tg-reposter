@@ -58,38 +58,59 @@ A simple Telegram automation script to automatically repost messages from a sour
 
 All commands are run via `make` and executed within a Docker container to ensure a consistent environment.
 
-### File-based Reposting Workflow
-
-To repost multiple messages, use the new file-based workflow:
-
 **Before you start:**
 - Run `make setup` to create the required data directories.
+- Run `make login` to create your Telegram session file.
 
-1. **Prepare your source URLs file:**
-   - Create a file at `./data/input/source_urls.txt` (one message URL per line).
-   - Each line should be a full Telegram message URL, e.g.:
-     ```
-     https://t.me/source_channel/12345
-     https://t.me/source_channel/12346
-     ```
+### Human-in-the-loop Workflow
 
-2. **Run the repost command:**
-   - Use the Makefile target and specify your destination channel and sleep interval in seconds (default: 0.1). You can also specify a custom source file with the `--source` option (defaults to `./data/input/source_urls.txt`):
-     ```bash
-     make repost ARGS="--sleep=2 --destination=<destination_channel>"
-     # Or, to use a custom input file:
-     make repost ARGS="--sleep=2 --source=./path/to/your_input.txt --destination=<destination_channel>"
-     # For faster testing (no delay between messages):
-     make repost ARGS="--sleep=0 --destination=<destination_channel>"
-     ```
+1. `make repost ARGS="--destination=<channel>"` – user verifies new posts.
+2. `make delete` – user verifies deletions (uses `./data/output/new_dest_urls.txt`).
 
-3. **Check the output:**
-   - After completion, new message URLs will be written to:
-     `./data/output/new_dest_urls.txt`
-   - Each line corresponds to a reposted message in the destination channel.
+### Fully Automatic Workflow
 
-### Other Commands
+A single `make sync ARGS="--destination=<channel> --source=<file>"` runs **repost** then **delete** sequentially, aborting on any error.
 
-*   `make delete ARGS="--delete-urls=<file>"`: Deletes messages from a list of URLs. If no file is specified, auto-detects the most recent `dest_urls_to_delete.txt` file.
-*   `make sync ARGS="--sleep=2 --destination=<channel> --source=<file>"`: Runs repost then delete operations sequentially (sleep in seconds).
-*   `make login`: Creates a new session file by logging in to Telegram.
+> **Note:** The sync command is not yet implemented.
+
+## Command Reference
+
+### `make repost`
+
+Reposts messages from a source file to a destination channel.
+
+**Usage:**
+```bash
+make repost ARGS="--sleep=2 --destination=<destination_channel>"
+# Or, to use a custom input file:
+make repost ARGS="--sleep=2 --source=./path/to/your_input.txt --destination=<destination_channel>"
+# For faster testing (no delay between messages):
+make repost ARGS="--sleep=0 --destination=<destination_channel>"
+```
+
+**How it works:**
+1. Reads URLs from `./data/input/source_urls.txt` (or custom `--source` file).
+2. Archives existing `new_dest_urls.txt` to `{TIMESTAMP}_old_dest_urls.txt` if it exists.
+3. For each URL, reposts the message via Telethon and appends the new URL to `new_dest_urls.txt`.
+4. Stops immediately on any error.
+
+### `make delete`
+
+Deletes messages from a destination channel based on a list of URLs.
+
+**Usage:**
+```bash
+make delete
+# Or, to use a custom delete file:
+make delete ARGS="--delete-urls=./path/to/your_delete_list.txt"
+```
+
+**How it works:**
+1. Uses `./data/output/new_dest_urls.txt` by default, or the file specified by `--delete-urls`.
+2. Deletes each message URL from the destination channel.
+3. On success, renames the processed file to `{TIMESTAMP}_deleted.txt`.
+4. Stops immediately on any error to ensure data integrity.
+
+### `make sync`
+
+**[Not yet implemented]** Will run repost then delete operations sequentially, aborting on any error.

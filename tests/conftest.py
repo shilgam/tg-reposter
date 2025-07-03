@@ -3,6 +3,10 @@ from unittest.mock import AsyncMock, patch
 import os
 import asyncio
 
+os.environ["TEST_MODE"] = "1"
+os.environ["API_ID"] = "12345"
+os.environ["API_HASH"] = "testhash"
+
 class MockMessage:
     def __init__(self, message_id, text="Test message", media=None):
         self.id = message_id
@@ -20,8 +24,12 @@ class MockEntity:
 @pytest.fixture(autouse=True)
 def mock_telethon_client():
     # Mock the TelegramClient that gets used in the code
-    with patch('src.reposter.TelegramClient', autospec=True) as mock_client_cls:
+    with patch('src.reposter.TelegramClient', autospec=True) as mock_client_cls, \
+         patch('src.delete.TelegramClient', autospec=True) as mock_delete_client_cls, \
+         patch('src.reposter.DummyClient.delete_messages', new_callable=AsyncMock) as mock_delete_messages:
         mock_client = mock_client_cls.return_value
+        mock_delete_client_cls.return_value = mock_client
+        mock_client.delete_messages = mock_delete_messages
 
         # Mock async context manager
         mock_client.__aenter__.return_value = mock_client

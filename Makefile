@@ -10,6 +10,7 @@ help:
 
 setup: ## Create temp input/output directories if missing.
 	@mkdir -p ./temp/input ./temp/output
+	@mkdir -p ./data/input ./data/output
 
 install: ## Install production and development dependencies.
 	@echo "Installing dependencies..."

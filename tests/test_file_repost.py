@@ -1,7 +1,5 @@
 import os
-import shutil
 import pytest
-import tempfile
 from pathlib import Path
 from src.reposter import repost_from_file
 
@@ -15,7 +13,6 @@ PRIVATE_MESSAGE_URL = "https://t.me/c/123456789/1"
 PRIVATE_CHANNEL_ID_FROM_URL = -100123456789
 
 MESSAGE_ID = 123
-DEST_MESSAGE_ID = 12345
 
 # Use ./tests/data/ for all test files
 TEMP_INPUT = "./tests/data/input"

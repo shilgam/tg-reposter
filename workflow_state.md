@@ -1,15 +1,28 @@
 # workflow_state.md
-_Last updated: 2025-06-29_
+_Last updated: 2025-07-03_
 
 ## State
 Phase: VALIDATE
 Status: COMPLETED
-CurrentItem: 12
+CurrentItem: 14
 
 ## Plan
 Item 10: File-driven repost logic implementation - COMPLETED
 Item 11: Refactor file logic for test/user data separation - COMPLETED
 Item 12: Add custom sleep interval to repost command - COMPLETED
+Item 13: Add delete command with CLI and Makefile support - COMPLETED
+
+- Implement `delete_from_file(delete_urls_file=None)` function in `src/delete.py`
+- If `delete_urls_file` is None, auto-detect `new_dest_urls.txt` in `./data/output/`
+- Parse URLs, extract message IDs and destination channel using existing URL parsing logic
+- Use Telethon to delete messages from the destination channel
+- Stop immediately on any error (data integrity first)
+- On success, rename the processed file to `{TIMESTAMP}_deleted.txt`
+- Update CLI `delete` command in `src/cli.py` with `--delete-urls` optional parameter
+- Connect CLI to `delete_from_file()` function
+- Add comprehensive tests for delete functionality
+- Ensure Makefile integration works: `make delete ARGS="--delete-urls=<file>"` and `make delete` (auto-detect)
+- Update documentation (`README.md`, `project_config.md`, `workflow_state.md`) and usage examples as needed
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -26,7 +39,7 @@ Item 12: Add custom sleep interval to repost command - COMPLETED
 ### [PHASE: CONSTRUCT]
 1. Follow the approved **## Plan** exactly.
 2. After each atomic change:
-   - run test / linter commands specified in `project_config.md`
+   - strictly follow the "## Development Workflow" in **project_config.md**
    - capture tool output in **## Log**
 3. On success of all steps, set `Phase = VALIDATE`.
 
@@ -109,7 +122,7 @@ Action ▶ Provide a brief list of common Git commands (`commit`, `branch`, `che
 | 10 | **File-driven repost logic** — read source URLs, repost, and write destination URLs | done |
 | 11 | **Refactor file logic for test/user data separation** | done |
 | 12 | **Add custom sleep interval to repost command** | done |
-| 13 | **Add delete command with CLI and Makefile support** | pending |
+| 13 | **Add delete command with CLI and Makefile support** | done |
 | 14 | **Add sync (repost + delete) command with CLI/Makefile** | pending |
 | 15 | **Repost all attachments from Telegram albums** | pending |
 | 16 | **Output only first media group link to file** | pending |
@@ -163,6 +176,8 @@ Moving to Item 11: Delete & sync commands implementation.
 - Created comprehensive test suite with 11 new tests covering all scenarios
 - All 31 tests passing including sleep interval functionality
 - Interface: make repost ARGS="--sleep=30 --destination=<channel>"
+
+2025-06-30: VALIDATE phase completed for Item 13. All tests passing, including new delete command with CLI and Makefile support. Documentation and changelog updated. Implementation validated with robust test coverage and file auto-detection.
 
 ## Workflow History
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
