@@ -1,5 +1,4 @@
 import os
-import shutil
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -7,6 +6,13 @@ from src.delete import delete_from_file
 from telethon.errors import ChatAdminRequiredError
 from click.testing import CliRunner
 from src.cli import cli
+
+# Test constants to replace magic numbers and strings
+PUBLIC_MESSAGE_URL = "https://t.me/publicsource/4"
+PRIVATE_MESSAGE_URL = "https://t.me/c/123456789/1"
+PRIVATE_CHANNEL_ID_FROM_URL = -100123456789
+
+MESSAGE_ID = 123
 
 TEMP_INPUT = "./tests/data/input"
 TEMP_OUTPUT = "./tests/data/output"
@@ -22,7 +28,7 @@ class TestDeleteFromFile:
         async def test_auto_detect_with_valid_file(self, temp_dirs, mock_telethon_client):
             """Test auto-detection when valid file exists"""
             # Create file in expected location
-            urls = ["https://t.me/publicsource/4"]
+            urls = [PUBLIC_MESSAGE_URL]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
@@ -70,7 +76,7 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_public_channel_url_parsing(self, temp_dirs, mock_telethon_client):
             """Test parsing of public channel URLs"""
-            urls = ["https://t.me/channelname/123"]
+            urls = [f"https://t.me/channelname/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
@@ -83,22 +89,22 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_private_channel_url_parsing(self, temp_dirs, mock_telethon_client):
             """Test parsing of private channel URLs"""
-            urls = ["https://t.me/c/123456789/456"]
+            urls = [f"https://t.me/c/123456789/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
             await delete_from_file(DELETE_FILE)
 
             # Verify correct private channel entity was requested
-            expected_channel_id = -100123456789
+            expected_channel_id = PRIVATE_CHANNEL_ID_FROM_URL
             mock_telethon_client.get_entity.assert_called_with(expected_channel_id)
 
         @pytest.mark.asyncio
         async def test_mixed_channel_types(self, temp_dirs, mock_telethon_client):
             """Test processing mixed public and private channel URLs"""
             urls = [
-                "https://t.me/publicsource/4",
-                "https://t.me/c/123456789/1"
+                PUBLIC_MESSAGE_URL,
+                PRIVATE_MESSAGE_URL
             ]
             with open(DELETE_FILE, "w") as f:
                 for url in urls:
@@ -114,8 +120,8 @@ class TestDeleteFromFile:
             urls = [
                 "https://t.me/",  # incomplete
                 "not_a_url",      # invalid format
-                "https://t.me/c/abc/123",  # invalid private format
-                "https://t.me/validchannel/123"  # valid one
+                f"https://t.me/c/abc/{MESSAGE_ID}",  # invalid private format
+                f"https://t.me/validchannel/{MESSAGE_ID}"  # valid one
             ]
             with open(DELETE_FILE, "w") as f:
                 for url in urls:
@@ -135,7 +141,7 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_channel_entity_resolution_failure(self, temp_dirs, mock_telethon_client):
             """Test fallback when get_entity fails"""
-            urls = ["https://t.me/problematic/123"]
+            urls = [f"https://t.me/problematic/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
@@ -151,7 +157,7 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_complete_entity_resolution_failure(self, temp_dirs, mock_telethon_client):
             """Test system exit when both entity resolution methods fail"""
-            urls = ["https://t.me/problematic/123"]
+            urls = [f"https://t.me/problematic/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
@@ -186,7 +192,7 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_permission_denied_error(self, temp_dirs, mock_telethon_client):
             """Test handling of ChatAdminRequiredError"""
-            urls = ["https://t.me/channel/123"]
+            urls = [f"https://t.me/channel/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
@@ -206,7 +212,7 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_successful_file_rename(self, temp_dirs, mock_telethon_client):
             """Test file is properly renamed after successful deletion"""
-            urls = ["https://t.me/publicsource/4"]
+            urls = [PUBLIC_MESSAGE_URL]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
@@ -264,7 +270,7 @@ class TestDeleteFromFile:
             subdir.mkdir(parents=True, exist_ok=True)
 
             custom_delete_file = subdir / "dest_urls_to_delete.txt"
-            urls = ["https://t.me/channel/123"]
+            urls = [f"https://t.me/channel/{MESSAGE_ID}"]
 
             with open(custom_delete_file, "w") as f:
                 f.write(f"{urls[0]}\n")
@@ -286,7 +292,7 @@ class TestDeleteFromFile:
 
         def test_cli_with_explicit_file_parameter(self, temp_dirs, mock_telethon_client):
             """Test CLI with explicit file parameter"""
-            urls = ["https://t.me/channel/123"]
+            urls = [f"https://t.me/channel/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
@@ -300,7 +306,7 @@ class TestDeleteFromFile:
 
         def test_cli_with_auto_detection(self, temp_dirs, mock_telethon_client):
             """Test CLI with auto-detection (no parameters)"""
-            urls = ["https://t.me/channel/123"]
+            urls = [f"https://t.me/channel/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 

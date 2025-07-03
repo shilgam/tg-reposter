@@ -3,6 +3,9 @@ import pytest
 from unittest.mock import patch, AsyncMock
 from src.reposter import get_sleep_interval, repost_from_file
 
+# Test constants to replace magic numbers and strings
+PUBLIC_CHANNEL = "@dummy_channel991"
+
 
 class TestSleepIntervalUtility:
     """Test the sleep interval utility function"""
@@ -57,7 +60,7 @@ class TestSleepIntervalIntegration:
             f.write("https://t.me/test/3\n")
 
         # Call repost with custom sleep interval
-        await repost_from_file("@testchannel", source_file, sleep_interval=1.5)
+        await repost_from_file(PUBLIC_CHANNEL, source_file, sleep_interval=1.5)
 
         # Verify sleep was called exactly 2 times (between 3 messages)
         assert mock_asyncio_sleep.call_count == 2
@@ -72,7 +75,7 @@ class TestSleepIntervalIntegration:
         with open(source_file, "w") as f:
             f.write("https://t.me/test/1\n")
 
-        await repost_from_file("@testchannel", source_file, sleep_interval=1.0)
+        await repost_from_file(PUBLIC_CHANNEL, source_file, sleep_interval=1.0)
 
         # No sleep should be called for single message
         assert mock_asyncio_sleep.call_count == 0
@@ -86,7 +89,7 @@ class TestSleepIntervalIntegration:
             f.write("https://t.me/test/2\n")
 
         with patch.dict(os.environ, {"REPOST_SLEEP_INTERVAL": "2.5"}):
-            await repost_from_file("@testchannel", source_file, sleep_interval=None)
+            await repost_from_file(PUBLIC_CHANNEL, source_file, sleep_interval=None)
 
         # Verify sleep was called with environment variable value
         assert mock_asyncio_sleep.call_count == 1
@@ -101,7 +104,7 @@ class TestSleepIntervalIntegration:
             f.write("https://t.me/test/2\n")
 
         with patch.dict(os.environ, {}, clear=True):
-            await repost_from_file("@testchannel", source_file, sleep_interval=None)
+            await repost_from_file(PUBLIC_CHANNEL, source_file, sleep_interval=None)
 
         # Verify sleep was called with default value
         assert mock_asyncio_sleep.call_count == 1
@@ -115,7 +118,7 @@ class TestSleepIntervalIntegration:
             f.write("https://t.me/test/1\n")
             f.write("https://t.me/test/2\n")
 
-        await repost_from_file("@testchannel", source_file, sleep_interval=0.0)
+        await repost_from_file(PUBLIC_CHANNEL, source_file, sleep_interval=0.0)
 
         # Verify sleep was called with zero value
         assert mock_asyncio_sleep.call_count == 1
