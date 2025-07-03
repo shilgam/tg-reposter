@@ -1,6 +1,6 @@
 # project_config.md
 
-Last-Updated: 2025-06-22
+Last-Updated: 2025-07-03
 
 ## Project Goal
 
@@ -62,14 +62,14 @@ Automate copying every message from a Telegram channel to channel so that the po
 - **Workflows:**
   - *Human-in-the-loop*:
     1. Run `make repost ARGS="--destination=<channel>"` to create new posts and verify them.
-    2. Run `make delete` to remove old posts (auto-detects `dest_urls_to_delete.txt`) and verify deletions.
+    2. Run `make delete` to remove old posts (auto-detects `new_dest_urls.txt`) and verify deletions.
   - *Fully automatic*:
     - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error.
 
 - **Command logic:**
   - `make repost`: Ensure or clear `new_dest_urls.txt` (archive if needed), repost each URL from `source_urls.txt`, appending new URLs. Stop on first error.
-  - `make delete`: Use provided list or latest archive, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`.
-  - `make sync`: Runs `repost` and, if successful, `delete` using the archived list.
+  - `make delete`: Use `new_dest_urls.txt` by default or file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`.
+  - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs.
 
 ## Critical Patterns & Conventions
 
@@ -84,8 +84,10 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 - **Key file roles:**
   - `source_urls.txt`: input, one Telegram message URL per line (required)
-  - `dest_urls_to_delete.txt`: input, optional, URLs to delete
-  - `new_dest_urls.txt`: output, new message URLs
+  - `new_dest_urls.txt`: **dual-purpose file**
+    - output from `make repost` (new message URLs written here)
+    - input to `make delete` (URLs read from here by default)
+  - `dest_urls_to_delete.txt`: input, optional, URLs to delete (when using --delete-urls)
   - `{TIMESTAMP}_old_dest_urls.txt`: output, archived previous URLs
   - `{TIMESTAMP}_deleted.txt`: output, confirms deletions
 
@@ -97,7 +99,7 @@ Automate copying every message from a Telegram channel to channel so that the po
   - Every new feature ships with unit tests that stub Telegram I/O.
   - Unit tests use nested classes to organize by functional area.
   - Docs avoid tables unless tables are essential.
-  - `make delete` defaults to the most recent `dest_urls_to_delete.txt` when `--delete-urls` is omitted (for easier interactive use). Use `make delete ARGS="--delete-urls=<file>"` to specify a file explicitly.
+  - `make delete` defaults to `new_dest_urls.txt` when `--delete-urls` is omitted (for easier interactive use). Use `make delete ARGS="--delete-urls=<file>"` to specify a file explicitly.
 
 ## Constraints
 
