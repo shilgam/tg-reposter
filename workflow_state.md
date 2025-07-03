@@ -42,7 +42,7 @@ Item 13: Add delete command with CLI and Makefile support - COMPLETED
 ### [PHASE: CONSTRUCT]
 1. Follow the approved **## Plan** exactly.
 2. After each atomic change:
-   - strictly follow the "## Development Workflow" in **project_config.md**
+   - strictly follow the "### Development Workflow" in **project_config.md**
    - capture tool output in **## Log**
 3. On success of all steps, set `Phase = VALIDATE`.
 
@@ -84,7 +84,7 @@ Action ▶
 #### RULE_GIT_COMMIT_01
 Trigger ▶ `Phase == VALIDATE && Status == COMPLETED`
 Action ▶
-1. Prompt user to commit changes with a generated message (e.g., `Phase X: [brief description]`).
+1. Prompt user to commit changes with a generated message (e.g., `Phase X: [brief description]`). Propose multiple messages
 2. Suggest creating a new branch for significant changes (e.g., `git checkout -b feature/new-thing`).
 3. Upon user confirmation, execute the `git add .` and `git commit` commands.
 4. Retrieve the new commit SHA using `git rev-parse HEAD`.
