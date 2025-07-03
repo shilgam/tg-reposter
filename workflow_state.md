@@ -2,8 +2,8 @@
 _Last updated: 2025-07-03_
 
 ## State
-Phase: VALIDATE
-Status: COMPLETED
+Phase: BLUEPRINT
+Status: NEEDS_PLAN_APPROVAL
 CurrentItem: 14
 
 ## Plan
@@ -12,18 +12,16 @@ Item 10: File-driven repost logic implementation - COMPLETED
 Item 11: Refactor file logic for test/user data separation - COMPLETED
 Item 12: Add custom sleep interval to repost command - COMPLETED
 Item 13: Add delete command with CLI and Makefile support - COMPLETED
+Item 14: Resend messages with multiple media files - PLAN PROPOSED
 
-- Implement `delete_from_file(delete_urls_file=None)` function in `src/delete.py`
-- If `delete_urls_file` is None, auto-detect `new_dest_urls.txt` in `./data/output/`
-- Parse URLs, extract message IDs and destination channel using existing URL parsing logic
-- Use Telethon to delete messages from the destination channel
-- Stop immediately on any error (data integrity first)
-- On success, rename the processed file to `{TIMESTAMP}_deleted.txt`
-- Update CLI `delete` command in `src/cli.py` with `--delete-urls` optional parameter
-- Connect CLI to `delete_from_file()` function
-- Add comprehensive tests for delete functionality
-- Ensure Makefile integration works: `make delete ARGS="--delete-urls=<file>"` and `make delete` (auto-detect)
-- Update documentation (`README.md`, `project_config.md`, `workflow_state.md`) and usage examples as needed
+Step 1: Analyze Telethon's support for multi-media (album) messages and identify the correct API usage (send_album, send_file, etc.).
+Step 2: Update the repost logic to detect when a source message contains multiple media files (album/grouped_id) and collect all related media.
+Step 3: Implement logic to repost all media in the group as a single album to the destination channel, preserving captions and order.
+Step 4: Ensure Markdown/HTML formatting is preserved in captions for all media items.
+Step 5: Update file I/O logic to correctly record new destination URLs for each message in the album, maintaining mapping to the source.
+Step 6: Add/extend unit tests to cover reposting of multi-media messages, including edge cases (mixed media types, missing captions, etc.).
+Step 7: Update CLI and Makefile as needed to support the new logic (if interface changes are required).
+Step 8: Update documentation and usage examples to reflect multi-media repost support.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
