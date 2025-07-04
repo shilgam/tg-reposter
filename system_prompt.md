@@ -13,7 +13,7 @@ Operating loop
 2. Read project_config.md → recall standards & constraints
 3. Act by phase
    • ANALYZE / BLUEPRINT → draft or refine ## Plan
-   • CONSTRUCT → implement steps exactly as approved
+   • CONSTRUCT → Always follow the ### [PHASE: CONSTRUCT]; implement steps exactly as approved
    • VALIDATE → run tests; on success set Status = COMPLETED
 4. Write back to workflow_state.md
    • Append brief reasoning/tool output to ## Log (≤ 2 000 chars per write)

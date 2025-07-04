@@ -9,46 +9,8 @@ Automate copying every message from a Telegram channel to channel so that the po
 ## Tech Stack
 
 - **Language(s):** Python ≥ 3.12 (strict type-hinting)
-- **Framework(s) & Libraries:** Telethon 1.x, Click (CLI), asyncio
-- **Build / Tooling:** Poetry, isort, pytest, Make, Docker
-
-## Development Workflow
-
-### LLM Assistant Step-by-Step Instructions
-
-1. **After each atomic code change:**
-   - Assess if current sub-step is complete and tests should pass.
-   - If fixes are still missing, continue working—don't run tests prematurely.
-
-2. **When you believe the code is ready:**
-   - Run `make test`.
-   - **Analyze the test output carefully:**
-     - Look for keywords: "FAILED", "ERROR", "FAIL", "AssertionError", "SystemExit"
-     - If any tests show "FAILED" status, the tests have failed
-     - Read the error messages and stack traces completely
-     - Identify the root cause of each failure
-   - If tests fail:
-     - Analyze each failure's root cause using the Test Failure Analysis Protocol below
-     - Propose specific solutions for each identified issue
-     - Ask user to choose the best approach
-     - Implement the chosen solution
-     - Repeat from step 2 (run tests again)
-   - If ALL tests pass (no "FAILED" entries): proceed to step 3.
-
-3. **Real account verification:**
-   - Use saved `${DEST_CHANNEL_ID}` or prompt user if needed.
-   - Execute verification commands sequentially (example):
-     ```
-     make repost ARGS="--source=./temp/input/_source_private.txt --destination=2763892937"
-     ```
-   - For each command: analyze output for errors.
-   - If errors found: propose solutions, ask user to choose, then repeat from step 2.
-   - Only proceed to next phase if all commands succeed.
-
-**Notes:**
-- Verification command list must be explicitly defined and can be extended.
-- Repeat all steps after every fix until both test and verification stages pass.
-- Require explicit user approval before proceeding to next phase.
+- **Framework(s) & Libraries:** Telethon 1.x, Click (CLI), asyncio,
+- **Build / Tooling:** pytest, Make, Docker Compose
 
 ## Core Capabilities
 
@@ -72,6 +34,42 @@ Automate copying every message from a Telegram channel to channel so that the po
   - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs.
 
 ## Critical Patterns & Conventions
+
+### Development Workflow
+
+1. **After each atomic code change:**
+   - Assess if current sub-step is complete and tests should pass.
+   - If fixes are still missing, continue working—don't run tests prematurely.
+
+2. **When you believe the code is ready:**
+   - Run tests (`make test`)
+   - **Analyze the test output carefully:**
+     - Look for keywords: "FAILED", "ERROR", "FAIL", "AssertionError", "SystemExit"
+     - If any tests show "FAILED" status, the tests have failed
+     - Read the error messages and stack traces completely
+     - Identify the root cause of each failure
+   - If tests fail:
+     - Analyze each failure's root cause
+     - Propose specific solutions for each identified issue
+     - Ask user to choose the best approach
+     - Implement the chosen solution
+     - Repeat from step 2 (run tests again)
+   - If ALL tests pass (no "FAILED" entries): proceed to step 3.
+
+3. **Real account verification:**
+   - Execute verification commands sequentially (example):
+     ```
+     make repost ARGS="--source=./data/input/_source_private.txt --destination=2763892937"
+     make delete
+     # list can be extended
+     ```
+   - For each command: analyze output for errors.
+   - If errors found: propose solutions, ask user to choose, then repeat from step 2.
+     - If no errors - proceed to next list item
+   - Only proceed to next phase if all commands succeed.
+     - If no errors - proceed to proceed to step 4.
+
+4. Trigger **RULE_GIT_COMMIT_01** to prompt for version control
 
 - **Directory layout:**
   ```
@@ -116,6 +114,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Added support for reposting Telegram albums (multi-media/grouped messages) as single albums, preserving captions and order, with full test and E2E coverage.
 - Added delete command with CLI and Makefile support, including file auto-detection, robust error handling, and comprehensive test coverage.
 - Refactored file logic to strictly separate user data (./data/) from test data (./tests/data/), ensuring atomic file operations and test isolation.
 - Completed file-driven repost logic implementation with CLI integration, supporting both public and private channels with atomic file operations.

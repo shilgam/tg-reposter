@@ -47,6 +47,27 @@ def read_dest_urls():
             return [line.strip() for line in f if line.strip()]
     return []
 
+def make_album_get_messages_side_effect(msgs):
+    """
+    Returns a side effect function for mock_telethon_client.get_messages
+    that simulates Telethon's behavior for album/grouped messages.
+    """
+    album_ids = [m.id for m in msgs]
+    def side_effect(entity, ids=None):
+        if isinstance(ids, list):
+            # If all album IDs are requested, return the full album
+            if set(album_ids).issubset(set(ids)):
+                return msgs
+            # Otherwise, return only the requested messages
+            return [m for m in msgs if m.id in ids]
+        else:
+            # Return the message with the requested id (as a single object)
+            for m in msgs:
+                if m.id == ids:
+                    return m
+            return None
+    return side_effect
+
 @pytest.mark.asyncio
 class TestChannelTypeCombinations:
     """Test correct reposting for each channel type combination"""
@@ -293,3 +314,116 @@ class TestIntegrationScenarios:
         await repost_from_file(dest, custom_source)
 
         assert mock_telethon_client.send_message.called
+
+
+@pytest.mark.asyncio
+class TestAlbumReposting:
+    """Test reposting of Telegram albums (grouped media messages) and edge cases."""
+    async def test_album_reposting_basic(self, temp_dirs, mock_telethon_client):
+        """Test reposting a simple album (all photos, one caption)."""
+        # Simulate 3 messages with same grouped_id, only first has caption
+        from tests.conftest import MockMessage
+        grouped_id = 555
+        media1 = object()
+        media2 = object()
+        media3 = object()
+        msgs = [
+            MockMessage(10, text="Album caption", media=media1),
+            MockMessage(11, text=None, media=media2),
+            MockMessage(12, text=None, media=media3),
+        ]
+        for m in msgs:
+            m.grouped_id = grouped_id
+        mock_telethon_client.get_messages.side_effect = make_album_get_messages_side_effect(msgs)
+        def fake_send_file(dest, media_list, caption=None):
+            assert media_list == [media1, media2, media3]
+            assert caption == "Album caption"
+            return [MockMessage(100, text=caption), MockMessage(101), MockMessage(102)]
+        mock_telethon_client.send_file.side_effect = fake_send_file
+        write_source_urls(["https://t.me/publicsource/10"])
+        dest = PUBLIC_CHANNEL
+        await repost_from_file(dest)
+        assert mock_telethon_client.send_file.called
+        dest_urls = read_dest_urls()
+        assert len(dest_urls) == 3
+
+    async def test_album_mixed_media_types(self, temp_dirs, mock_telethon_client):
+        """Test album with mixed media types (photo, video, doc)."""
+        from tests.conftest import MockMessage
+        grouped_id = 777
+        media_photo = object()
+        media_video = object()
+        media_doc = object()
+        msgs = [
+            MockMessage(20, text="Photo caption", media=media_photo),
+            MockMessage(21, text=None, media=media_video),
+            MockMessage(22, text=None, media=media_doc),
+        ]
+        for m in msgs:
+            m.grouped_id = grouped_id
+        mock_telethon_client.get_messages.side_effect = make_album_get_messages_side_effect(msgs)
+        def fake_send_file(dest, media_list, caption=None):
+            assert media_list == [media_photo, media_video, media_doc]
+            assert caption == "Photo caption"
+            return [MockMessage(200, text=caption), MockMessage(201), MockMessage(202)]
+        mock_telethon_client.send_file.side_effect = fake_send_file
+        write_source_urls(["https://t.me/publicsource/20"])
+        dest = PUBLIC_CHANNEL
+        await repost_from_file(dest)
+        assert mock_telethon_client.send_file.called
+        dest_urls = read_dest_urls()
+        assert len(dest_urls) == 3
+
+    async def test_album_missing_caption(self, temp_dirs, mock_telethon_client):
+        """Test album where no message has a caption."""
+        from tests.conftest import MockMessage
+        grouped_id = 888
+        media1 = object()
+        media2 = object()
+        msgs = [
+            MockMessage(30, text=None, media=media1),
+            MockMessage(31, text=None, media=media2),
+        ]
+        for m in msgs:
+            m.grouped_id = grouped_id
+        mock_telethon_client.get_messages.side_effect = make_album_get_messages_side_effect(msgs)
+        def fake_send_file(dest, media_list, caption=None):
+            assert media_list == [media1, media2]
+            assert caption is None
+            return [MockMessage(300), MockMessage(301)]
+        mock_telethon_client.send_file.side_effect = fake_send_file
+        write_source_urls(["https://t.me/publicsource/30"])
+        dest = PUBLIC_CHANNEL
+        await repost_from_file(dest)
+        assert mock_telethon_client.send_file.called
+        dest_urls = read_dest_urls()
+        assert len(dest_urls) == 2
+
+    async def test_album_order_preserved(self, temp_dirs, mock_telethon_client):
+        """Test that album media are sent in original order."""
+        from tests.conftest import MockMessage
+        grouped_id = 999
+        mediaA = object()
+        mediaB = object()
+        mediaC = object()
+        msgs = [
+            MockMessage(41, text=None, media=mediaB),
+            MockMessage(40, text="First", media=mediaA),
+            MockMessage(42, text=None, media=mediaC),
+        ]
+        for m in msgs:
+            m.grouped_id = grouped_id
+        # Out of order, should be sorted by id
+        mock_telethon_client.get_messages.side_effect = make_album_get_messages_side_effect(msgs)
+        def fake_send_file(dest, media_list, caption=None):
+            # Should be sorted: A, B, C
+            assert media_list == [mediaA, mediaB, mediaC]
+            assert caption == "First"
+            return [MockMessage(400, text=caption), MockMessage(401), MockMessage(402)]
+        mock_telethon_client.send_file.side_effect = fake_send_file
+        write_source_urls(["https://t.me/publicsource/40"])
+        dest = PUBLIC_CHANNEL
+        await repost_from_file(dest)
+        assert mock_telethon_client.send_file.called
+        dest_urls = read_dest_urls()
+        assert len(dest_urls) == 3

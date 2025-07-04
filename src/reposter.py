@@ -155,6 +155,38 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                         except (ValueError, TypeError):
                             pass
                         message_to_send = await client.get_messages(source_id, ids=msg_id)
+
+                        # --- Media group logic ---
+                        grouped_id = getattr(message_to_send, 'grouped_id', None)
+                        if grouped_id:
+                            # Fetch a wider window of messages around msg_id to ensure all group messages are found
+                            fetch_ids = list(range(msg_id - 10, msg_id + 10))
+                            group_msgs = await client.get_messages(source_id, ids=fetch_ids)
+                            group_msgs = [m for m in group_msgs if getattr(m, 'grouped_id', None) == grouped_id]
+                            group_msgs = sorted(group_msgs, key=lambda m: m.id)
+                            media_list = []
+                            for m in group_msgs:
+                                if hasattr(m, 'media') and m.media:
+                                    media_list.append(m.media)
+                            if media_list:
+                                # Only the first item can have a caption in Telegram albums
+                                caption = message_to_send.message if hasattr(message_to_send, 'message') else None
+                                sent_msgs = await client.send_file(dest_entity, media_list, caption=caption)
+                                # send_file returns a list if multiple files, or a single Message if one file
+                                if not isinstance(sent_msgs, list):
+                                    sent_msgs = [sent_msgs]
+                                # Write URLs for each sent message
+                                for sent in sent_msgs:
+                                    # Format destination URL correctly for private/public channels
+                                    if normalized_destination.startswith("-100"):
+                                        new_url = f"https://t.me/c/{normalized_destination[4:]}/{sent.id}"
+                                    else:
+                                        new_url = f"https://t.me/{normalized_destination}/{sent.id}"
+                                    out.write(new_url + "\n")
+                                print(f"Reposted media group {grouped_id} from {channel} to {normalized_destination} as {len(sent_msgs)} messages.")
+                                await asyncio.sleep(sleep_time)
+                                continue  # Skip the single-message send below
+                        # --- End media group logic ---
                         if message_to_send:
                             sent = await client.send_message(dest_entity, message_to_send)
                             # Format destination URL correctly for private/public channels
