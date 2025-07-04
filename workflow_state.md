@@ -162,12 +162,20 @@ Action ▶
 | 12 | **Add custom sleep interval to repost command** | done |
 | 13 | **Add delete command with CLI and Makefile support** | done |
 | 14 | **Resend messages with multiple media files** | done |
-| 15 | **Add sync (repost + delete) command with Makefile** | pending |
+| 15 | **Add sync (repost + delete) command with Makefile** | done |
 | 16 | **Keep Markdown/HTML formatting when reposting messages** | pending |
 
 ## Log
-<!-- AI appends detailed reasoning, tool output, and errors here -->
+2025-07-04: Item 15 (sync command) implementation complete. All plan steps executed:
+- CLI sync command implemented and tested
+- delete command accepts and ignores extra shared flags
+- Makefile sync target forwards ARGS
+- Unit tests for flag handling added and passing
+- Documentation updated (README, project_config.md)
+- Full test suite passed (55/55)
+- Manual smoke test: repost and delete both succeeded with no errors
 
+Marking Item 15 as done.
 
 ## Workflow History
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
