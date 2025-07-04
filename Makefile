@@ -9,13 +9,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 setup: ## Create temp input/output directories if missing.
-	@mkdir -p ./temp/input ./temp/output
 	@mkdir -p ./data/input ./data/output
-
-install: ## Install production and development dependencies.
-	@echo "Installing dependencies..."
-	pip install -r requirements.txt
-	pip install -r dev-requirements.txt
 
 test: ## Run tests using Docker Compose (CI style).
 	docker compose -f docker-compose.ci.yml up \
