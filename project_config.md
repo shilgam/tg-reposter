@@ -113,6 +113,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Added sync command (repost + delete) with Makefile support, unified ARGS, robust flag handling, and full test/E2E coverage.
 - Added support for reposting Telegram albums (multi-media/grouped messages) as single albums, preserving captions and order, with full test and E2E coverage.
 - Added delete command with CLI and Makefile support, including file auto-detection, robust error handling, and comprehensive test coverage.
 - Refactored file logic to strictly separate user data (./data/) from test data (./tests/data/), ensuring atomic file operations and test isolation.
