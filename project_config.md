@@ -35,7 +35,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 ## Critical Patterns & Conventions
 
-### Development Workflow (LLM Assistant Step-by-Step Instructions)
+### Development Workflow
 
 1. **After each atomic code change:**
    - Assess if current sub-step is complete and tests should pass.
@@ -114,6 +114,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Added support for reposting Telegram albums (multi-media/grouped messages) as single albums, preserving captions and order, with full test and E2E coverage.
 - Added delete command with CLI and Makefile support, including file auto-detection, robust error handling, and comprehensive test coverage.
 - Refactored file logic to strictly separate user data (./data/) from test data (./tests/data/), ensuring atomic file operations and test isolation.
 - Completed file-driven repost logic implementation with CLI integration, supporting both public and private channels with atomic file operations.
