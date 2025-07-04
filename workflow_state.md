@@ -2,25 +2,35 @@
 _Last updated: 2025-07-03_
 
 ## State
-Phase: ANALYZE
-Status: READY
+Phase: BLUEPRINT
+Status: NEEDS_PLAN_APPROVAL
 CurrentItem: 15
 
 ## Plan
-<!-- The AI fills this in during the BLUEPRINT phase -->
-Item 10: File-driven repost logic implementation - COMPLETED
-Item 11: Refactor file logic for test/user data separation - COMPLETED
-Item 12: Add custom sleep interval to repost command - COMPLETED
-Item 13: Add delete command with CLI and Makefile support - COMPLETED
-Item 14: Resend messages with multiple media files - PLAN PROPOSED
+Item 15: Add sync (repost + delete) command with Makefile
 
-Step 1: Analyze Telethon's support for multi-media (album) messages and identify the correct API usage (send_album, send_file, etc.).
-Step 2: Update the repost logic to detect when a source message contains multiple media files (album/grouped_id) and collect all related media.
-Step 3: Implement logic to repost all media in the group as a single album to the destination channel, preserving captions and order.
-Step 4: Update file I/O logic to correctly record new destination URLs for each message in the album, maintaining mapping to the source.
-Step 5: Add/extend unit tests to cover reposting of multi-media messages, including edge cases (mixed media types, missing captions, etc.).
-Step 6: Update CLI and Makefile as needed to support the new logic (if interface changes are required).
-Step 7: Update documentation and usage examples to reflect multi-media repost support.
+Step 1: Implement the `sync` CLI command in `src/cli.py` that:
+   • Accepts the same `--source`, `--destination`, `--sleep`, `--delete-urls` flags as `repost`/`delete`
+   • Runs `repost_from_file`; if it succeeds, runs `delete_from_file`
+Step 2: Add the shared flags (`--source`, `--destination`, `--sleep`) as hidden options to the `delete` CLI command.
+Step 3: Ensure the `delete` command ignores the values of these extra flags during execution.
+Step 4: Update the Makefile: keep existing pattern and ensure the `sync` target forwards `$(ARGS)` (no extra logic).
+Step 5: Implement unit tests:
+   • Success path — `delete` returns 0 when the extra shared flags are supplied.
+   • Failure path — `delete` exits non-zero with an unknown flag (typo).
+Step 6: Update documentation (README and project_config.md):
+   • Describe the new `sync` command syntax and behaviour.
+   • Note that `delete` silently ignores the shared flags, enabling unified `ARGS`.
+Step 7: Run the full test suite locally (`make test`) and confirm all tests pass.
+Step 8: Perform a manual smoke test:
+   make sync ARGS="--source=./data/input/_source_private.txt \
+                   --destination=2763892937 \
+                   --sleep=2 \
+                   --delete-urls=./data/output/new_dest_urls.txt"
+   Verify repost then delete work without errors.
+Step 9: Update workflow_state.md:
+   • Log checklist completion under Item 15.
+   • Set Item 15 status to **done** when all steps succeed.
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
