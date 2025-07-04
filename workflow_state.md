@@ -38,11 +38,23 @@ Step 7: Update documentation and usage examples to reflect multi-media repost su
 4. Set `Status = NEEDS_PLAN_APPROVAL` and await user confirmation.
 
 ### [PHASE: CONSTRUCT]
-1. Follow the approved **## Plan** exactly.
-2. After each atomic change:
-   - strictly follow the "### Development Workflow" in **project_config.md**
-   - capture tool output in **## Log**
-3. On success of all steps, set `Phase = VALIDATE`.
+**MANDATORY CONTEXT**: Always follow `project_config.md` "Development Workflow" steps
+
+1. **Session Start**: Re-read `project_config.md` "Development Workflow" section
+2. Follow approved **## Plan** exactly, one step at a time.
+3. **For EACH Plan step, complete this workflow checklist:**
+   ```
+   Step X: [Description]
+   - [ ] Implementation complete (`project_config.md` > Step 1)
+   - [ ] Tests executed and analyzed (`project_config.md`  > Step 2)
+   - [ ] ALL tests pass (zero "FAILED" entries)
+   - [ ] Real account verification executed (`project_config.md` > Step 3)
+   - [ ] ALL verification commands succeed (zero errors)
+   - [ ] Ready for next step
+   ```
+4. **Before starting next Plan step**: Re-confirm previous step's checklist is complete
+5. **Session Handoff**: Log exact checklist status for continuation
+6. **Only set `Phase = VALIDATE`** when ALL Plan steps show complete checklists.
 
 ### [PHASE: VALIDATE]
 1. Rerun full test suite & any E2E checks.
@@ -82,9 +94,9 @@ Action ▶
 #### RULE_GIT_COMMIT_01
 Trigger ▶ `Phase == VALIDATE && Status == COMPLETED`
 Action ▶
-1. Prompt user to commit changes with a generated message (e.g., `Phase X: [brief description]`). Propose multiple messages
+1. Prompt user to commit changes with a generated message (e.g., `Phase X: [brief description]`). Suggest multiple messages and let the user choose.
 2. Suggest creating a new branch for significant changes (e.g., `git checkout -b feature/new-thing`).
-3. Upon user confirmation, execute the `git add .` and `git commit` commands.
+3. **Upon user confirmation**, execute the `git add .` and `git commit` commands.
 4. Retrieve the new commit SHA using `git rev-parse HEAD`.
 5. Prepend the SHA and commit message to `## Workflow History`.
 
@@ -140,7 +152,7 @@ Action ▶
 | 11 | **Refactor file logic for test/user data separation** | done |
 | 12 | **Add custom sleep interval to repost command** | done |
 | 13 | **Add delete command with CLI and Makefile support** | done |
-| 14 | **Resend messages with multiple media files** | pending |
+| 14 | **Resend messages with multiple media files** | done |
 | 15 | **Add sync (repost + delete) command with CLI/Makefile** | pending |
 | 16 | **Keep Markdown/HTML formatting when reposting messages** | pending |
 
@@ -194,6 +206,21 @@ Moving to Item 11: Delete & sync commands implementation.
 - Interface: make repost ARGS="--sleep=30 --destination=<channel>"
 
 2025-06-30: VALIDATE phase completed for Item 13. All tests passing, including new delete command with CLI and Makefile support. Documentation and changelog updated. Implementation validated with robust test coverage and file auto-detection.
+
+2025-07-03: CONSTRUCT phase completed for Item 14 Step 4. Successfully implemented proper file I/O logic for album URL mapping:
+- Added processed_grouped_ids tracking to prevent duplicate album processing
+- Implemented source_to_dest_mapping dictionary to maintain proper URL correspondence
+- Fixed album source URL reconstruction for both public and private channels
+- Ensured destination URLs are written in same order as source URLs maintaining mapping integrity
+- Added comprehensive test suite with 6 new tests covering album functionality:
+  • Single album processing (no duplicates)
+  • Proper URL mapping and ordering
+  • Mixed album + individual message handling
+  • Private channel album URL formatting
+  • Albums with missing captions
+  • Empty media list edge cases
+- All 55 tests passing including new album functionality
+- Multi-media album reposting now correctly handles source→destination URL mapping without duplicates
 
 ## Workflow History
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
