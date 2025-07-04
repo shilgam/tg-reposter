@@ -26,12 +26,12 @@ Automate copying every message from a Telegram channel to channel so that the po
     1. Run `make repost ARGS="--destination=<channel>"` to create new posts and verify them.
     2. Run `make delete` to remove old posts (auto-detects `new_dest_urls.txt`) and verify deletions.
   - *Fully automatic*:
-    - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error.
+    - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error. The sync command is now implemented and accepts the same flags as repost and delete. The delete command silently ignores extra shared flags, so you can use unified ARGS for all commands.
 
 - **Command logic:**
   - `make repost`: Ensure or clear `new_dest_urls.txt` (archive if needed), repost each URL from `source_urls.txt`, appending new URLs. Stop on first error.
-  - `make delete`: Use `new_dest_urls.txt` by default or file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`.
-  - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs.
+  - `make delete`: Use `new_dest_urls.txt` by default or file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`. Silently ignores extra shared flags (`--source`, `--destination`, `--sleep`) for unified ARGS.
+  - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs. Accepts the same flags as repost and delete, aborts on any error.
 
 ## Critical Patterns & Conventions
 

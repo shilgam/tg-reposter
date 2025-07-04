@@ -71,7 +71,7 @@ All commands are run via `make` and executed within a Docker container to ensure
 
 A single `make sync ARGS="--destination=<channel> --source=<file>"` runs **repost** then **delete** sequentially, aborting on any error.
 
-> **Note:** The sync command is not yet implemented.
+> **Note:** The sync command is now implemented. It accepts the same flags as repost and delete, and will abort on any error. The delete command silently ignores extra shared flags, so you can use unified ARGS for all commands.
 
 ## Command Reference
 
@@ -113,4 +113,20 @@ make delete ARGS="--delete-urls=./path/to/your_delete_list.txt"
 
 ### `make sync`
 
-**[Not yet implemented]** Will run repost then delete operations sequentially, aborting on any error.
+Runs repost then delete operations sequentially, aborting on any error.
+
+**Usage:**
+```bash
+make sync ARGS="--source=./data/input/_source_private.txt \
+                --destination=2763892937 \
+                --sleep=2 \
+                --delete-urls=./data/output/new_dest_urls.txt"
+```
+
+- Accepts the same flags as repost and delete.
+- If repost succeeds, delete is run automatically.
+- If any step fails, sync aborts and exits non-zero.
+
+### `make delete`
+
+**Note:** The delete command accepts extra shared flags (`--source`, `--destination`, `--sleep`) and silently ignores them. This enables unified ARGS for all commands.

@@ -36,7 +36,10 @@ def login():
 
 @cli.command()
 @click.option("--delete-urls", required=False, default=None, help="File with message URLs to delete. If omitted, auto-detects the most recent dest_urls_to_delete.txt in ./data/output/.")
-def delete(delete_urls):
+@click.option("--source", required=False, default=None, help="(Hidden) Ignored by delete.", hidden=True)
+@click.option("--destination", required=False, default=None, help="(Hidden) Ignored by delete.", hidden=True)
+@click.option("--sleep", required=False, default=None, type=float, help="(Hidden) Ignored by delete.", hidden=True)
+def delete(delete_urls, source, destination, sleep):
     """Deletes messages from the destination channel based on a list."""
     import sys
     try:
@@ -53,6 +56,23 @@ def delete(delete_urls):
 
 
 @cli.command()
-def sync():
-    """(Not yet implemented)"""
-    click.echo("Sync command is not yet implemented.")
+@click.option("--destination", required=True, help="Destination channel ID or username.")
+@click.option("--source", required=False, default="./temp/input/source_urls.txt", help="Source file with message URLs.")
+@click.option("--sleep", type=float, default=None, help="Sleep interval in seconds between reposts (default: 0.1, overridden by REPOST_SLEEP_INTERVAL env var).")
+@click.option("--delete-urls", required=False, default=None, help="File with message URLs to delete. If omitted, auto-detects the most recent dest_urls_to_delete.txt in ./data/output/.")
+def sync(destination, source, sleep, delete_urls):
+    """Reposts messages, then deletes them in sequence (abort on error)."""
+    import sys
+    try:
+        click.echo(f"[SYNC] Reposting messages to {destination} from {source}...")
+        asyncio.run(repost_from_file(destination, source, sleep))
+        click.echo("[SYNC] Repost succeeded. Proceeding to delete...")
+        asyncio.run(delete_from_file(delete_urls))
+        click.echo("[SYNC] Delete succeeded. Sync complete.")
+        sys.exit(0)
+    except FileNotFoundError as e:
+        click.echo(f"[SYNC] File not found: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"[SYNC] Error: {e}", err=True)
+        sys.exit(1)

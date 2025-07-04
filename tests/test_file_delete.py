@@ -327,3 +327,30 @@ class TestDeleteFromFile:
             assert result.exit_code != 0
             # Should contain error information
             assert "No new_dest_urls.txt found in ./tests/data/output/." in result.output or "Error" in result.output
+
+        def test_cli_delete_accepts_extra_shared_flags(self, temp_dirs, mock_telethon_client):
+            """Delete should return 0 when extra shared flags are supplied."""
+            urls = [f"https://t.me/channel/{MESSAGE_ID}"]
+            with open(DELETE_FILE, "w") as f:
+                f.write(f"{urls[0]}\n")
+
+            runner = CliRunner()
+            result = runner.invoke(
+                cli,
+                [
+                    'delete',
+                    '--delete-urls', DELETE_FILE,
+                    '--source', 'dummy.txt',
+                    '--destination', 'dummy_dest',
+                    '--sleep', '2'
+                ]
+            )
+            assert result.exit_code == 0
+            assert "Delete command finished." in result.output
+
+        def test_cli_delete_unknown_flag_fails(self, temp_dirs, mock_telethon_client):
+            """Delete should exit non-zero with an unknown flag (typo)."""
+            runner = CliRunner()
+            result = runner.invoke(cli, ['delete', '--notaflag'])
+            assert result.exit_code != 0
+            assert "Error" in result.output or "no such option" in result.output.lower()
