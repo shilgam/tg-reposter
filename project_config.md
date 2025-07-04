@@ -26,12 +26,12 @@ Automate copying every message from a Telegram channel to channel so that the po
     1. Run `make repost ARGS="--destination=<channel>"` to create new posts and verify them.
     2. Run `make delete` to remove old posts (auto-detects `new_dest_urls.txt`) and verify deletions.
   - *Fully automatic*:
-    - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error.
+    - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error. The sync command is now implemented and accepts the same flags as repost and delete. The delete command silently ignores extra shared flags, so you can use unified ARGS for all commands.
 
 - **Command logic:**
   - `make repost`: Ensure or clear `new_dest_urls.txt` (archive if needed), repost each URL from `source_urls.txt`, appending new URLs. Stop on first error.
-  - `make delete`: Use `new_dest_urls.txt` by default or file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`.
-  - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs.
+  - `make delete`: Use `new_dest_urls.txt` by default or file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`. Silently ignores extra shared flags (`--source`, `--destination`, `--sleep`) for unified ARGS.
+  - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs. Accepts the same flags as repost and delete, aborts on any error.
 
 ## Critical Patterns & Conventions
 
@@ -57,15 +57,14 @@ Automate copying every message from a Telegram channel to channel so that the po
    - If ALL tests pass (no "FAILED" entries): proceed to step 3.
 
 3. **Real account verification:**
-   - Execute verification commands sequentially (example):
+   - Execute verification commands:
      ```
-     make repost ARGS="--source=./data/input/_source_private.txt --destination=2763892937"
-     make delete
+     make sync ARGS="--source=./data/input/_source_private.txt --destination=2763892937"
      # list can be extended
      ```
    - For each command: analyze output for errors.
    - If errors found: propose solutions, ask user to choose, then repeat from step 2.
-     - If no errors - proceed to next list item
+     - If no errors - proceed to next phase
    - Only proceed to next phase if all commands succeed.
      - If no errors - proceed to proceed to step 4.
 
@@ -114,6 +113,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Added sync command (repost + delete) with Makefile support, unified ARGS, robust flag handling, and full test/E2E coverage.
 - Added support for reposting Telegram albums (multi-media/grouped messages) as single albums, preserving captions and order, with full test and E2E coverage.
 - Added delete command with CLI and Makefile support, including file auto-detection, robust error handling, and comprehensive test coverage.
 - Refactored file logic to strictly separate user data (./data/) from test data (./tests/data/), ensuring atomic file operations and test isolation.

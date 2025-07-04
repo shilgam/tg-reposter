@@ -36,7 +36,10 @@ def login():
 
 @cli.command()
 @click.option("--delete-urls", required=False, default=None, help="File with message URLs to delete. If omitted, auto-detects the most recent dest_urls_to_delete.txt in ./data/output/.")
-def delete(delete_urls):
+@click.option("--source", required=False, default=None, help="(Hidden) Ignored by delete.", hidden=True)
+@click.option("--destination", required=False, default=None, help="(Hidden) Ignored by delete.", hidden=True)
+@click.option("--sleep", required=False, default=None, type=float, help="(Hidden) Ignored by delete.", hidden=True)
+def delete(delete_urls, source, destination, sleep):
     """Deletes messages from the destination channel based on a list."""
     import sys
     try:
@@ -50,9 +53,3 @@ def delete(delete_urls):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
-
-
-@cli.command()
-def sync():
-    """(Not yet implemented)"""
-    click.echo("Sync command is not yet implemented.")
