@@ -34,4 +34,4 @@ delete: ## Deletes messages. Pass CLI arguments via the ARGS variable.
 	@docker-compose run --rm reposter python -m src.main delete $(ARGS)
 
 sync: ## Syncs messages. Pass CLI arguments via the ARGS variable.
-	@docker-compose run --rm reposter python -m src.main sync $(ARGS)
+	$(MAKE) repost ARGS="$(ARGS)" && $(MAKE) delete ARGS="$(ARGS)"
