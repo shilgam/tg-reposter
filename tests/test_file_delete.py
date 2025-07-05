@@ -235,16 +235,11 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_empty_input_file_handling(self, temp_dirs, mock_telethon_client):
             """Test handling of empty input files"""
-            # Create empty file
-            Path(MARKED_FILE).touch()
-
-            await delete_from_file(MARKED_FILE, destination=TEST_SLUG)
-
-            # No Telethon calls should be made
+            marked_file, ts = make_marked_file()
+            Path(marked_file).touch()
+            await delete_from_file(marked_file, destination=TEST_SLUG)
             mock_telethon_client.delete_messages.assert_not_called()
-
-            # File should still be renamed (consistent behavior)
-            deleted_files = find_deleted_file(publish_ts=datetime.now().strftime("%Y%m%d_%H%M%S"))
+            deleted_files = find_deleted_file(publish_ts=ts)
             assert len(deleted_files) == 1
 
         @pytest.mark.asyncio
@@ -293,15 +288,12 @@ class TestDeleteFromFile:
         """Tests for CLI integration and command-line interface"""
 
         def test_cli_with_explicit_file_parameter(self, temp_dirs, mock_telethon_client):
-            """Test CLI with explicit file parameter"""
             urls = [f"https://t.me/channel/{MESSAGE_ID}"]
             marked_file, ts = make_marked_file()
             with open(marked_file, "w") as f:
                 f.write(f"{urls[0]}\n")
-
             runner = CliRunner()
-            result = runner.invoke(cli, ['delete', '--delete-urls', marked_file])
-
+            result = runner.invoke(cli, ['delete', '--delete-urls', marked_file, '--destination', TEST_SLUG])
             assert result.exit_code == 0
             assert "Deleting messages using file:" in result.output
             assert marked_file in result.output
@@ -310,15 +302,12 @@ class TestDeleteFromFile:
             assert len(deleted_files) == 1
 
         def test_cli_with_auto_detection(self, temp_dirs, mock_telethon_client):
-            """Test CLI with auto-detection (no parameters)"""
             urls = [f"https://t.me/channel/{MESSAGE_ID}"]
             marked_file, ts = make_marked_file()
             with open(marked_file, "w") as f:
                 f.write(f"{urls[0]}\n")
-
             runner = CliRunner()
             result = runner.invoke(cli, ['delete', '--destination', TEST_SLUG])
-
             assert result.exit_code == 0
             assert "Deleting messages using file: [auto-detect]" in result.output
             assert "Delete command finished." in result.output
