@@ -4,6 +4,9 @@ import sys
 import inspect
 import asyncio
 from typing import Optional
+import shutil
+from datetime import datetime
+from src.utils_files import dest_slug, parse_publish_ts, list_runs
 
 # Define DummyClient at module level so it can be mocked in tests
 class DummyClient:
@@ -101,8 +104,12 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
     # Directory logic: use ./data/ for user, ./tests/data/ for tests
     input_dir, output_dir = get_data_dirs()
     input_file = source or os.path.join(input_dir, "source_urls.txt")
-    output_file = os.path.join(output_dir, "new_dest_urls.txt")
-    temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
+    # --- New file naming logic ---
+    slug = dest_slug(str(destination))
+    publish_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = os.path.join(output_dir, f"{publish_ts}_{slug}.txt")
+    temp_file = output_file + ".tmp"
+    # --- End new logic ---
 
     # Normalize destination for all downstream logic
     normalized_destination = str(normalize_channel_id(destination))
@@ -208,6 +215,17 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                     print(f"Invalid Telegram message URL: {url}", file=sys.stderr)
                     any_invalid = True
 
+    # --- Tag previous untagged file for this dest_slug ---
+    prev_files = list_runs(slug, "")
+    prev_files = [f for f in prev_files if f.name != os.path.basename(output_file) and not f.name.endswith(".marked_for_deletion.txt") and not ".deleted_at_" in f.name]
+    if prev_files:
+        prev_file = prev_files[-1]  # latest
+        prev_publish_ts = parse_publish_ts(prev_file.name)
+        if prev_publish_ts:
+            marked_name = prev_file.with_name(f"{prev_publish_ts.strftime('%Y%m%d_%H%M%S')}_{slug}.marked_for_deletion.txt")
+            prev_file.rename(marked_name)
+            print(f"Tagged previous file {prev_file} as {marked_name}")
+    # --- Atomic move ---
     os.replace(temp_file, output_file)
     print(f"Wrote new destination URLs to {output_file} (atomic write).")
     if any_invalid:
