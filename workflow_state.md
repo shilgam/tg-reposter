@@ -2,35 +2,81 @@
 _Last updated: 2025-07-03_
 
 ## State
-Phase: VALIDATE
-Status: COMPLETED
-CurrentItem: 15
+Phase: BLUEPRINT
+Status: NEEDS_PLAN_APPROVAL
+CurrentItem: 16
 
 ## Plan
-Item 15: Add sync (repost + delete) command with Makefile
 
-Step 1: Implement the `sync` CLI command in `src/cli.py` that:
-   • Accepts the same `--source`, `--destination`, `--sleep`, `--delete-urls` flags as `repost`/`delete`
-   • Runs `repost_from_file`; if it succeeds, runs `delete_from_file`
-Step 2: Add the shared flags (`--source`, `--destination`, `--sleep`) as hidden options to the `delete` CLI command.
-Step 3: Ensure the `delete` command ignores the values of these extra flags during execution.
-Step 4: Update the Makefile: keep existing pattern and ensure the `sync` target forwards `$(ARGS)` (no extra logic).
-Step 5: Implement unit tests:
-   • Success path — `delete` returns 0 when the extra shared flags are supplied.
-   • Failure path — `delete` exits non-zero with an unknown flag (typo).
-Step 6: Update documentation (README and project_config.md):
-   • Describe the new `sync` command syntax and behaviour.
-   • Note that `delete` silently ignores the shared flags, enabling unified `ARGS`.
-Step 7: Run the full test suite locally (`make test`) and confirm all tests pass.
-Step 8: Perform a manual smoke test:
-   make sync ARGS="--source=./data/input/_source_private.txt \
-                   --destination=2763892937 \
-                   --sleep=2 \
-                   --delete-urls=./data/output/new_dest_urls.txt"
-   Verify repost then delete work without errors.
-Step 9: Update workflow_state.md:
-   • Log checklist completion under Item 15.
-   • Set Item 15 status to **done** when all steps succeed.
+0  Safety net
+ b. `make test` ⇢ all green (baseline)
+
+1  Utilities layer 🌱 (tests added, suite green)
+ a. Add `src/utils_files.py` with:
+  • `dest_slug(dest: str)` – strip “-100” if numeric
+  • `parse_publish_ts(path)` – returns datetime or None
+  • `list_runs(dest_slug, status=["", "marked_for_deletion"])` – returns sorted list\[Path] (newest→oldest)
+ b. Add unit tests in `tests/utils/test_utils_files.py`
+  • `test_dest_slug_numeric_private`
+  • `test_parse_publish_ts_valid_invalid`
+  • `test_list_runs_filters_and_orders`
+
+2  Reposter ➜ write timestamped file (keep legacy) ✅
+ a. Refactor `src/reposter.py` to:
+  • use `dest_slug`
+  • After reposting, write to `{publish_ts}_{slug}.txt` via atomic tmp-rename
+  • still write **`new_dest_urls.txt`** for old tests
+ b. Tests `tests/repost/test_timestamp_file_creation.py`
+  • `test_timestamp_file_written`
+  • `test_legacy_file_still_written`
+ c. Suite remains green
+
+3  Reposter ➜ mark previous untagged run 🟢
+ a. Implement “second-to-last” tagging → rename to `.marked_for_deletion.txt`
+ b. Tests `tests/repost/test_mark_previous_run.py`
+  • `test_first_run_no_mark`
+  • `test_second_run_marks_previous`
+  • `test_already_tagged_is_skipped`
+ c. Suite remains green
+
+4  Delete API ➜ auto-detect latest marked file 🟢
+ a. Add `async delete_from_file(file: str|None, destination: str|None)` in `src/delete.py`
+ b. When `file is None` pick newest `.marked_for_deletion` for that slug
+ c. Tests `tests/delete/test_auto_detect_marked.py`
+  • `test_latest_marked_selected`
+  • `test_error_when_none_found`
+ d. Old tests still pass (signature is backward compatible)
+
+5  Delete ➜ dual-timestamp rename *(tests updated here!)* 🟢
+ a. Rename processed file to `{publish_ts}_{slug}.deleted_at_{delete_ts}.txt`
+ b. **Update existing delete tests** that asserted `*_deleted.txt`
+  • `tests/test_file_delete.py`: replace glob + pattern expectations
+ c. Add new fine-grained test `tests/delete/test_rename_after_deletion.py`
+  • `test_filename_contains_both_timestamps`
+ d. Run full test suite – must stay green
+
+6  CLI wiring 🟢
+ a. `src/cli.py`: delete command passes hidden `destination` to new API
+ b. Update/extend `tests/cli/test_delete_cli.py` (`test_destination_auto_passed`)
+ c. Suite green
+
+7  Remove legacy `new_dest_urls.txt` (code + tests) 🟢
+ a. Stop writing legacy file in `src/reposter.py`
+ b. Delete or refactor tests that referenced the legacy file:
+  • `tests/test_file_repost.py`, `tests/test_file_delete.py` – adjust fixtures to use timestamp files
+ c. Final suite green
+
+8  Docs 📝
+ a. Update `README.md` and `project_config.md` “Workflows & Command Logic” with new filename examples
+
+9  Validation & wrap-up ✅
+ a. `make test` – all pass
+ b. Manual smoke flow
+      ```
+      make repost ARGS="--destination=<dest>"
+      make repost ARGS="--destination=<dest>"   # tags first run
+      make delete ARGS="--destination=<dest>"   # consumes .marked_for_deletion
+      ```
 
 ## Rules
 > **Keep every major section under an explicit H2 (`##`) heading so the agent can locate them unambiguously.**
@@ -192,4 +238,51 @@ Marking Item 15 as done.
 ## Blueprint History
 <!-- RULE_BLUEPRINT_ARCHIVE_01 stores previous blueprint versions here -->
 <!-- Format: ### Blueprint [YYYY-MM-DD HH:MM:SS] - ID: [UUID-short] -->
-<!-- Each archived blueprint is stored under its timestamped heading -->
+### Blueprint 2025-07-06 15:30 - ID: 5e7a
+1. src/reposter.py – write & tag files
+   a. Helper `dest_slug(dest)` (see §3).
+   b. On each run:
+      • `publish_ts = now("%Y%m%d_%H%M%S")`
+      • Write links to
+        **`{publish_ts}_{dest_slug}.txt`** → atomic move from *.tmp
+   c. Find previous **untagged** file for same `dest_slug` matching
+      `^\d{8}_\d{6}_{dest_slug}\.txt$` (no status suffix)
+      • If found, rename it to
+        **`{prev_publish_ts}_{dest_slug}.marked_for_deletion.txt`**
+      • Skip if it is already `.marked_for_deletion` or `.deleted_at_…`
+
+2. src/delete.py – consume & archive
+   Signature → `async def delete_from_file(file: str | None = None, destination: str | None = None)`
+   a. When `file is None`, require `destination`; derive `dest_slug`.
+   b. Pick latest file matching
+      `^\d{8}_\d{6}_{dest_slug}\.marked_for_deletion\.txt$`
+   c. Delete URLs (current logic).
+   d. Always rename processed file to
+      **`{publish_ts}_{dest_slug}.deleted_at_{delete_ts}.txt`**
+
+3. Shared helpers (src/utils_files.py)
+   • `dest_slug(dest: str) -> str`  (strip “-100” prefix if numeric)
+   • `parse_publish_ts(path) -> datetime | None`
+   • `list_runs(dest_slug, status: Literal["", "marked_for_deletion"]) -> list[Path]`
+
+4. src/cli.py
+   • `delete` passes hidden `destination` to `delete_from_file` for auto-detection.
+
+5. Tests
+   a. Adjust existing repost/delete tests for new file names.
+   b. New cases:
+      • repost tags prior run with `.marked_for_deletion`
+      • delete auto-detects correct `.marked_for_deletion` when multiple dests exist
+      • processed file renamed to `.deleted_at_…` even when explicit file arg supplied
+
+6. Docs (README + project_config.md)
+   • Update “Workflows & Command Logic” with the new naming examples.
+
+7. Validation
+   • `make test` (all pass)
+   • Manual smoke flow:
+     ```
+     make repost ARGS="--destination=<dest>"
+     make repost ARGS="--destination=<dest>"   # tags first run
+     make delete ARGS="--destination=<dest>"   # consumes .marked_for_deletion
+     ```
