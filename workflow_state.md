@@ -59,6 +59,7 @@ Step 9: Update workflow_state.md:
    - [ ] ALL tests pass (zero "FAILED" entries)
    - [ ] Real account verification executed (`project_config.md` > Step 3)
    - [ ] ALL verification commands succeed (zero errors)
+   - [ ] Trigger **RULE_GIT_COMMIT_01** to prompt for version control
    - [ ] Ready for next step
    ```
 4. **Before starting next Plan step**: Re-confirm previous step's checklist is complete
@@ -103,11 +104,15 @@ Action ▶
 #### RULE_GIT_COMMIT_01
 Trigger ▶ `Phase == VALIDATE && Status == COMPLETED`
 Action ▶
-1. Prompt user to commit changes with a generated message (e.g., `Phase X: [brief description]`). Suggest multiple messages and let the user choose.
-2. Suggest creating a new branch for significant changes (e.g., `git checkout -b feature/new-thing`).
-3. **Upon user confirmation**, execute the `git add .` and `git commit` commands.
-4. Retrieve the new commit SHA using `git rev-parse HEAD`.
-5. Prepend the SHA and commit message to `## Workflow History`.
+1. Display menu:
+      1. Skip commit
+      2-7. Draft commit subjects (optional body indented)
+2. Wait for a single number (1-7).
+3. **If 1** → skip committing and resume workflow.
+4. **Else** →
+      • Execute the `git add .` and `git commit` commands.
+      • Retrieve the new commit SHA using `git rev-parse HEAD`.
+      • Prepend the SHA and commit message to `## Workflow History`.
 
 #### RULE_GIT_ROLLBACK_01
 Trigger ▶ User command like "revert to..." or "rollback to..." followed by a description.
