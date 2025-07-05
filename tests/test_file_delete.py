@@ -7,6 +7,8 @@ from telethon.errors import ChatAdminRequiredError
 from click.testing import CliRunner
 from src.cli import cli
 from src.utils_files import dest_slug
+import re
+from datetime import datetime
 
 # Test constants to replace magic numbers and strings
 PUBLIC_MESSAGE_URL = "https://t.me/publicsource/4"
@@ -21,6 +23,18 @@ TEST_SLUG = 'testslug'
 MARKED_FILE = os.path.join(TEMP_OUTPUT, f"20250101_120000_{TEST_SLUG}.marked_for_deletion.txt")
 DELETED_PATTERN = f"*_{TEST_SLUG}.deleted_at_*.txt"
 
+def make_marked_file(slug=TEST_SLUG, output_dir=TEMP_OUTPUT):
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = os.path.join(output_dir, f"{ts}_{slug}.marked_for_deletion.txt")
+    return path, ts
+
+def find_deleted_file(slug=TEST_SLUG, output_dir=TEMP_OUTPUT, publish_ts=None):
+    pattern = f"*_{slug}.deleted_at_*.txt"
+    files = list(Path(output_dir).glob(pattern))
+    if publish_ts:
+        files = [f for f in files if f.name.startswith(f"{publish_ts}_")]
+    return files
+
 class TestDeleteFromFile:
     """Main test suite for delete_from_file functionality"""
 
@@ -31,11 +45,12 @@ class TestDeleteFromFile:
         async def test_auto_detect_with_valid_file(self, temp_dirs, mock_telethon_client):
             """Test auto-detection when valid file exists"""
             urls = [PUBLIC_MESSAGE_URL]
-            with open(MARKED_FILE, "w") as f:
+            marked_file, ts = make_marked_file()
+            with open(marked_file, "w") as f:
                 f.write(f"{urls[0]}\n")
             await delete_from_file(None, destination=TEST_SLUG)
             assert mock_telethon_client.delete_messages.call_count == len(urls)
-            deleted_files = list(Path(TEMP_OUTPUT).glob(DELETED_PATTERN))
+            deleted_files = find_deleted_file(publish_ts=ts)
             assert len(deleted_files) == 1
 
         @pytest.mark.asyncio
@@ -48,14 +63,14 @@ class TestDeleteFromFile:
         @pytest.mark.asyncio
         async def test_auto_detect_with_multiple_files(self, temp_dirs, mock_telethon_client):
             import time
-            older_file = Path(TEMP_OUTPUT) / f"20240101_120000_{TEST_SLUG}.marked_for_deletion.txt"
-            older_file.write_text("https://t.me/old/1\n")
-            older_time = time.time() - 3600
-            os.utime(older_file, (older_time, older_time))
-            newer_file = Path(TEMP_OUTPUT) / f"20250101_120000_{TEST_SLUG}.marked_for_deletion.txt"
-            newer_file.write_text("https://t.me/new/1\n")
+            older_file = os.path.join(TEMP_OUTPUT, f"20240101_120000_{TEST_SLUG}.marked_for_deletion.txt")
+            with open(older_file, "w") as f:
+                f.write("https://t.me/old/1\n")
+            newer_file, ts = make_marked_file()
+            with open(newer_file, "w") as f:
+                f.write("https://t.me/new/1\n")
             await delete_from_file(None, destination=TEST_SLUG)
-            deleted_files = list(Path(TEMP_OUTPUT).glob(DELETED_PATTERN))
+            deleted_files = find_deleted_file(publish_ts=ts)
             assert len(deleted_files) == 1
 
     class TestURLParsing:
@@ -199,22 +214,23 @@ class TestDeleteFromFile:
         async def test_successful_file_rename(self, temp_dirs, mock_telethon_client):
             """Test file is properly renamed after successful deletion"""
             urls = [PUBLIC_MESSAGE_URL]
-            with open(MARKED_FILE, "w") as f:
+            marked_file, ts = make_marked_file()
+            with open(marked_file, "w") as f:
                 f.write(f"{urls[0]}\n")
 
-            await delete_from_file(MARKED_FILE, destination=TEST_SLUG)
+            await delete_from_file(marked_file, destination=TEST_SLUG)
 
             # Verify original file is gone
-            assert not Path(MARKED_FILE).exists()
+            assert not Path(marked_file).exists()
 
             # Verify renamed file exists with correct pattern
-            deleted_files = list(Path(TEMP_OUTPUT).glob(DELETED_PATTERN))
+            deleted_files = find_deleted_file(publish_ts=ts)
             assert len(deleted_files) == 1
 
             # Verify timestamp format (YYYYMMDD_HHMMSS)
             filename = deleted_files[0].name
-            timestamp_part = filename.split("_deleted.txt")[0]
-            assert len(timestamp_part) == 15  # YYYYMMDD_HHMMSS
+            # Check full pattern: {publish_ts}_{slug}.deleted_at_{delete_ts}.txt
+            assert re.match(rf"{ts}_{TEST_SLUG}\.deleted_at_\d{{8}}_\d{{6}}\.txt", filename)
 
         @pytest.mark.asyncio
         async def test_empty_input_file_handling(self, temp_dirs, mock_telethon_client):
@@ -228,7 +244,7 @@ class TestDeleteFromFile:
             mock_telethon_client.delete_messages.assert_not_called()
 
             # File should still be renamed (consistent behavior)
-            deleted_files = list(Path(TEMP_OUTPUT).glob(DELETED_PATTERN))
+            deleted_files = find_deleted_file(publish_ts=datetime.now().strftime("%Y%m%d_%H%M%S"))
             assert len(deleted_files) == 1
 
         @pytest.mark.asyncio
@@ -279,29 +295,35 @@ class TestDeleteFromFile:
         def test_cli_with_explicit_file_parameter(self, temp_dirs, mock_telethon_client):
             """Test CLI with explicit file parameter"""
             urls = [f"https://t.me/channel/{MESSAGE_ID}"]
-            with open(MARKED_FILE, "w") as f:
+            marked_file, ts = make_marked_file()
+            with open(marked_file, "w") as f:
                 f.write(f"{urls[0]}\n")
 
             runner = CliRunner()
-            result = runner.invoke(cli, ['delete', '--delete-urls', MARKED_FILE])
+            result = runner.invoke(cli, ['delete', '--delete-urls', marked_file])
 
             assert result.exit_code == 0
             assert "Deleting messages using file:" in result.output
-            assert MARKED_FILE in result.output
+            assert marked_file in result.output
             assert "Delete command finished." in result.output
+            deleted_files = find_deleted_file(publish_ts=ts)
+            assert len(deleted_files) == 1
 
         def test_cli_with_auto_detection(self, temp_dirs, mock_telethon_client):
             """Test CLI with auto-detection (no parameters)"""
             urls = [f"https://t.me/channel/{MESSAGE_ID}"]
-            with open(MARKED_FILE, "w") as f:
+            marked_file, ts = make_marked_file()
+            with open(marked_file, "w") as f:
                 f.write(f"{urls[0]}\n")
 
             runner = CliRunner()
-            result = runner.invoke(cli, ['delete'])
+            result = runner.invoke(cli, ['delete', '--destination', TEST_SLUG])
 
             assert result.exit_code == 0
             assert "Deleting messages using file: [auto-detect]" in result.output
             assert "Delete command finished." in result.output
+            deleted_files = find_deleted_file(publish_ts=ts)
+            assert len(deleted_files) == 1
 
         def test_cli_error_propagation(self, temp_dirs, mock_telethon_client):
             """Test CLI error propagation"""
