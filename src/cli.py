@@ -44,7 +44,7 @@ def delete(delete_urls, source, destination, sleep):
     import sys
     try:
         click.echo(f"Deleting messages using file: {delete_urls or '[auto-detect]'}...")
-        asyncio.run(delete_from_file(delete_urls))
+        asyncio.run(delete_from_file(delete_urls, destination))
         click.echo("Delete command finished.")
         sys.exit(0)
     except FileNotFoundError as e:
