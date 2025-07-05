@@ -2,6 +2,7 @@ import os
 import pytest
 from pathlib import Path
 from src.reposter import repost_from_file
+from src.utils_files import dest_slug
 
 # Test constants to replace magic numbers
 PUBLIC_CHANNEL = "@dummy_channel991"
@@ -18,7 +19,14 @@ MESSAGE_ID = 123
 TEMP_INPUT = "./tests/data/input"
 TEMP_OUTPUT = "./tests/data/output"
 SOURCE_FILE = os.path.join(TEMP_INPUT, "source_urls.txt")
-DEST_FILE = os.path.join(TEMP_OUTPUT, "new_dest_urls.txt")
+
+# Helper to locate the most recent output file produced by repost_from_file.
+def latest_output_file():
+    txt_files = [f for f in Path(TEMP_OUTPUT).glob("*.txt")
+                 if ".marked_for_deletion" not in f.name and ".deleted_at_" not in f.name]
+    if not txt_files:
+        return None
+    return max(txt_files, key=lambda p: p.stat().st_mtime)
 
 
 def create_temp_source_file(urls, filename=None):
@@ -41,9 +49,10 @@ def write_source_urls(urls):
             f.write(f"{url}\n")
 
 def read_dest_urls():
-    """Helper to read destination URLs from output file"""
-    if os.path.exists(DEST_FILE):
-        with open(DEST_FILE, "r") as f:
+    """Read URLs from the latest output file (if any)."""
+    out_file = latest_output_file()
+    if out_file and out_file.exists():
+        with open(out_file, "r") as f:
             return [line.strip() for line in f if line.strip()]
     return []
 
@@ -77,7 +86,7 @@ class TestChannelTypeCombinations:
         dest = PUBLIC_CHANNEL
         await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
-        assert os.path.exists(DEST_FILE)
+        assert latest_output_file() is not None
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 1
         assert dest_urls[0].startswith("https://t.me/")
@@ -88,7 +97,7 @@ class TestChannelTypeCombinations:
         dest = PRIVATE_CHANNEL_ID  # Private channel ID
         await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
-        assert os.path.exists(DEST_FILE)
+        assert latest_output_file() is not None
         dest_urls = read_dest_urls()
         assert len(dest_urls) == 1
 
@@ -98,7 +107,7 @@ class TestChannelTypeCombinations:
         dest = PRIVATE_CHANNEL_ID  # Private channel ID
         await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
-        assert os.path.exists(DEST_FILE)
+        assert latest_output_file() is not None
 
     async def test_private_source_to_public_dest(self, temp_dirs, mock_telethon_client):
         """Test private channel to public channel reposting"""
@@ -106,7 +115,7 @@ class TestChannelTypeCombinations:
         dest = PUBLIC_CHANNEL
         await repost_from_file(dest)
         assert mock_telethon_client.send_message.called
-        assert os.path.exists(DEST_FILE)
+        assert latest_output_file() is not None
 
 
 @pytest.mark.asyncio
@@ -256,7 +265,7 @@ class TestFileIOOperations:
 
         await repost_from_file(dest)
 
-        assert os.path.exists(DEST_FILE)
+        assert latest_output_file() is not None
         # Temp file should not exist after successful write
         assert not os.path.exists(temp_file)
 
