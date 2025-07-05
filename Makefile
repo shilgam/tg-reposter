@@ -29,3 +29,7 @@ delete: ## Deletes messages. Pass CLI arguments via the ARGS variable.
 
 sync: ## Syncs messages. Pass CLI arguments via the ARGS variable.
 	$(MAKE) repost ARGS="$(ARGS)" && $(MAKE) delete ARGS="$(ARGS)"
+
+install: ## Install all dependencies (prod + dev)
+	pip install --no-cache-dir -r requirements.txt
+	pip install --no-cache-dir -r dev-requirements.txt
