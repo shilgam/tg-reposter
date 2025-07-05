@@ -168,7 +168,8 @@ Action ▶
 | 13 | **Add delete command with CLI and Makefile support** | done |
 | 14 | **Resend messages with multiple media files** | done |
 | 15 | **Add sync (repost + delete) command with Makefile** | done |
-| 16 | **Keep Markdown/HTML formatting when reposting messages** | pending |
+| 16 | Redesign file-handling workflow (timestamped files + lifecycle tags) | pending |
+| 17 | **Keep Markdown/HTML formatting when reposting messages** | pending |
 
 ## Log
 2025-07-04: Item 15 (sync command) implementation complete. All plan steps executed:
