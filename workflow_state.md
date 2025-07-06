@@ -294,8 +294,23 @@ Step 7: Remove legacy new_dest_urls.txt (code + tests)
 - [x] ALL verification commands succeed (0 errors)
 - [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
+2025-07-06: Starting Step 8 - Docs update. Will update README.md and project_config.md "Workflows & Command Logic" with new timestamped filename examples.
+2025-07-06: Step 8 docs update completed:
+- README.md: Updated workflows, command logic, and added File Lifecycle section
+- project_config.md: Updated "Workflows & Command Logic" and "Key file roles" sections
+- All references to legacy new_dest_urls.txt replaced with timestamped file patterns
+- Tests remain green (62/62)
+Checklist:
+Step 8: Docs update
+- [x] Implementation complete (README.md + project_config.md updated)
+- [x] Tests executed and analyzed (62/62 pass)
+- [x] ALL tests pass (zero "FAILED" entries)
+- [x] Real account verification not required (docs only)
+- [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Ready for next step
 
 ## Workflow History
+08a9cd1 feat: remove legacy new_dest_urls.txt file handling
 a16c183 feat(cli): forward hidden --destination to delete command for auto-detect
 096e44a feat(delete): add dual-timestamp rename `{publish}_{slug}.deleted_at_{ts}.txt`
 94c1ea9 feat(delete): auto-detect latest .marked_for_deletion file when destination provided
