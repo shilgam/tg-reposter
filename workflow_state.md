@@ -239,7 +239,7 @@ Step 1: Utilities layer
 - [x] ALL tests pass (58/58)
 - [x] Real account verification executed
 - [x] ALL verification commands succeed (0 errors)
-- [ ] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
 2025-07-06: Step 2 Reposter timestamp file & tagging preparation implemented.
 Checklist:
@@ -253,6 +253,7 @@ Step 2: Reposter write timestamped file (keep legacy)
 - [x] Ready for next step
 
 ## Workflow History
+3c58ad6 feat(reposter): write timestamped slug file alongside legacy new_dest_urls.txt
 2322941 feat(utils): introduce shared file-naming helpers and tests
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
 

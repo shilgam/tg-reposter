@@ -5,6 +5,7 @@ import inspect
 import asyncio
 from typing import Optional
 from datetime import datetime
+from pathlib import Path
 
 from src.utils_files import dest_slug
 
@@ -109,11 +110,19 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
     legacy_output_file = os.path.join(output_dir, "new_dest_urls.txt")
     legacy_temp_file = legacy_output_file + ".tmp"
 
-    publish_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    from datetime import timedelta
+
     normalized_destination = str(normalize_channel_id(destination))
     slug = dest_slug(normalized_destination)
-    timestamp_filename = f"{publish_ts}_{slug}.txt"
-    ts_output_file = os.path.join(output_dir, timestamp_filename)
+
+    publish_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts_output_file = os.path.join(output_dir, f"{publish_ts}_{slug}.txt")
+    # Ensure unique filename within same second (important for fast tests)
+    while Path(ts_output_file).exists():
+        dt = datetime.strptime(publish_ts, "%Y%m%d_%H%M%S") + timedelta(seconds=1)
+        publish_ts = dt.strftime("%Y%m%d_%H%M%S")
+        ts_output_file = os.path.join(output_dir, f"{publish_ts}_{slug}.txt")
+
     ts_temp_file = ts_output_file + ".tmp"
 
     # Normalize destination for all downstream logic (already computed above)
@@ -226,5 +235,22 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
     os.replace(legacy_temp_file, legacy_output_file)
     os.replace(ts_temp_file, ts_output_file)
     print(f"Wrote new destination URLs to {legacy_output_file} (legacy) and {ts_output_file}.")
+
+    # --- Tag previous untagged run for same destination ---
+    from src.utils_files import list_runs  # local import to avoid top-level cycle
+
+    existing_runs = list_runs(slug, status=[""])  # only untagged files
+    # The first item should be the newest; remove the current file itself
+    if existing_runs and existing_runs[0] == Path(ts_output_file):
+        existing_runs = existing_runs[1:]
+
+    if existing_runs:
+        prev_path = existing_runs[0]
+        marked_path = prev_path.with_suffix("")  # drop .txt
+        marked_path = Path(str(marked_path) + ".marked_for_deletion.txt")
+        if not marked_path.exists():
+            prev_path.rename(marked_path)
+            print(f"Tagged previous run {prev_path.name} as {marked_path.name} for deletion.")
+
     if any_invalid:
         sys.exit(1)
