@@ -156,7 +156,7 @@ Action ▶
 2. Wait for a single number (1-7).
 3. **If 1** → skip committing and resume workflow.
 4. **Else** →
-      • Execute the `git add .` and `git commit` commands.
+      • Execute the `git add .` and `git commit`, `git push` commands
       • Retrieve the new commit SHA using `git rev-parse HEAD`.
       • Prepend the SHA and commit message to `## Workflow History`.
 
@@ -286,7 +286,7 @@ Step 6: CLI wiring for delete
 5791ea3 feat(reposter): tag previous untagged run as .marked_for_deletion and add tests
 3c58ad6 feat(reposter): write timestamped slug file alongside legacy new_dest_urls.txt
 2322941 feat(utils): introduce shared file-naming helpers and tests
-<!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
+<!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here (newest first) -->
 
 ## ArchiveLog
 <!-- RULE_LOG_ROTATE_01 stores condensed summaries here -->
