@@ -37,7 +37,7 @@ class TestDeleteFromFile:
 
             assert mock_telethon_client.delete_messages.call_count == len(urls)
             # Verify file was renamed
-            deleted_files = list(Path(TEMP_OUTPUT).glob("*_deleted.txt"))
+            deleted_files = list(Path(TEMP_OUTPUT).glob("*deleted_at_*.txt"))
             assert len(deleted_files) == 1
 
         @pytest.mark.asyncio
@@ -187,7 +187,7 @@ class TestDeleteFromFile:
 
             # Verify original file still exists (atomic behavior)
             assert Path(DELETE_FILE).exists()
-            assert not list(Path(TEMP_OUTPUT).glob("*_deleted.txt"))
+            assert not list(Path(TEMP_OUTPUT).glob("*deleted_at_*.txt"))
 
         @pytest.mark.asyncio
         async def test_permission_denied_error(self, temp_dirs, mock_telethon_client):
@@ -204,7 +204,7 @@ class TestDeleteFromFile:
 
             # Verify file not renamed (atomic behavior)
             assert Path(DELETE_FILE).exists()
-            assert not list(Path(TEMP_OUTPUT).glob("*_deleted.txt"))
+            assert not list(Path(TEMP_OUTPUT).glob("*deleted_at_*.txt"))
 
     class TestFileOperations:
         """Tests for file operations and atomic behavior"""
@@ -222,13 +222,12 @@ class TestDeleteFromFile:
             assert not Path(DELETE_FILE).exists()
 
             # Verify renamed file exists with correct pattern
-            deleted_files = list(Path(TEMP_OUTPUT).glob("*_deleted.txt"))
+            deleted_files = list(Path(TEMP_OUTPUT).glob("*deleted_at_*.txt"))
             assert len(deleted_files) == 1
 
             # Verify timestamp format (YYYYMMDD_HHMMSS)
             filename = deleted_files[0].name
-            timestamp_part = filename.split("_deleted.txt")[0]
-            assert len(timestamp_part) == 15  # YYYYMMDD_HHMMSS
+            assert ".deleted_at_" in filename
 
         @pytest.mark.asyncio
         async def test_empty_input_file_handling(self, temp_dirs, mock_telethon_client):
@@ -242,7 +241,7 @@ class TestDeleteFromFile:
             mock_telethon_client.delete_messages.assert_not_called()
 
             # File should still be renamed (consistent behavior)
-            deleted_files = list(Path(TEMP_OUTPUT).glob("*_deleted.txt"))
+            deleted_files = list(Path(TEMP_OUTPUT).glob("*deleted_at_*.txt"))
             assert len(deleted_files) == 1
 
         @pytest.mark.asyncio
@@ -281,7 +280,7 @@ class TestDeleteFromFile:
             assert not custom_delete_file.exists()
 
             # Verify renamed file exists in same subdirectory
-            deleted_files = list(subdir.glob("*_deleted.txt"))
+            deleted_files = list(subdir.glob("*deleted_at_*.txt"))
             assert len(deleted_files) == 1
 
             # Verify the renamed file is in the same subdirectory

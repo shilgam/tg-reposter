@@ -105,9 +105,22 @@ async def delete_from_file(
         raise SystemExit(1)
 
     # Rename the processed file to {TIMESTAMP}_deleted.txt
+    import re
+
     dir_name = os.path.dirname(delete_urls_file)
     base_name = os.path.basename(delete_urls_file)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    new_name = os.path.join(dir_name, f"{timestamp}_deleted.txt")
+
+    # Determine original publish_ts and slug if encoded in filename
+    m = re.match(r"^(?P<publish>\d{8}_\d{6})_(?P<slug>[^.]+)", base_name)
+    if m:
+        publish_ts = m.group("publish")
+        slug = m.group("slug")
+    else:
+        publish_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        slug = Path(base_name).stem.replace("new_dest_urls", "legacy")
+
+    delete_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    new_name = os.path.join(dir_name, f"{publish_ts}_{slug}.deleted_at_{delete_ts}.txt")
+
     os.replace(delete_urls_file, new_name)
     print(f"Renamed {base_name} to {os.path.basename(new_name)} after successful deletion.")
