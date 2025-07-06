@@ -2,8 +2,8 @@
 _Last updated: 2025-07-03_
 
 ## State
-Phase: CONSTRUCT
-Status: RUNNING
+Phase: VALIDATE
+Status: COMPLETED
 CurrentItem: 16
 
 ## Plan
@@ -308,8 +308,22 @@ Step 8: Docs update
 - [x] Real account verification not required (docs only)
 - [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
+2025-07-06: Step 9 validation & wrap-up complete:
+- make test: all 62 tests pass
+- Manual smoke flow:
+  - Two repost runs created timestamped files and tagged previous run as .marked_for_deletion.txt
+  - Delete run auto-detected and consumed .marked_for_deletion file, renamed to .deleted_at_...txt
+  - All commands finished with no errors
+Checklist:
+Step 9: Validation & wrap-up
+- [x] Implementation complete (manual smoke flow)
+- [x] Tests executed and analyzed (62/62 pass)
+- [x] ALL tests pass (zero "FAILED" entries)
+- [x] Manual smoke flow executed (all commands succeed, file lifecycle correct)
+- [x] Ready for VALIDATE phase
 
 ## Workflow History
+95f95b7 docs: update file handling documentation for timestamped workflow
 08a9cd1 feat: remove legacy new_dest_urls.txt file handling
 a16c183 feat(cli): forward hidden --destination to delete command for auto-detect
 096e44a feat(delete): add dual-timestamp rename `{publish}_{slug}.deleted_at_{ts}.txt`
