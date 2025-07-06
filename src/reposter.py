@@ -4,6 +4,9 @@ import sys
 import inspect
 import asyncio
 from typing import Optional
+from datetime import datetime
+
+from src.utils_files import dest_slug
 
 # Define DummyClient at module level so it can be mocked in tests
 class DummyClient:
@@ -101,11 +104,19 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
     # Directory logic: use ./data/ for user, ./tests/data/ for tests
     input_dir, output_dir = get_data_dirs()
     input_file = source or os.path.join(input_dir, "source_urls.txt")
-    output_file = os.path.join(output_dir, "new_dest_urls.txt")
-    temp_file = os.path.join(output_dir, "new_dest_urls.txt.tmp")
 
-    # Normalize destination for all downstream logic
+    # --- Output filenames ---
+    legacy_output_file = os.path.join(output_dir, "new_dest_urls.txt")
+    legacy_temp_file = legacy_output_file + ".tmp"
+
+    publish_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     normalized_destination = str(normalize_channel_id(destination))
+    slug = dest_slug(normalized_destination)
+    timestamp_filename = f"{publish_ts}_{slug}.txt"
+    ts_output_file = os.path.join(output_dir, timestamp_filename)
+    ts_temp_file = ts_output_file + ".tmp"
+
+    # Normalize destination for all downstream logic (already computed above)
 
     # Get the actual sleep interval to use
     sleep_time = get_sleep_interval(sleep_interval)
@@ -144,7 +155,9 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
             print(f"Could not resolve the destination entity '{destination}'. Error: {e}", file=sys.stderr)
             sys.exit(1)
 
-        with open(temp_file, "w", encoding="utf-8") as out:
+        # Open both temp files so we can write to each simultaneously
+        with open(legacy_temp_file, "w", encoding="utf-8") as legacy_out, \
+             open(ts_temp_file, "w", encoding="utf-8") as ts_out:
             for i, url in enumerate(source_urls):
                 channel, msg_id = parse_telegram_url(url)
                 if channel and msg_id:
@@ -182,7 +195,8 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                                         new_url = f"https://t.me/c/{normalized_destination[4:]}/{sent.id}"
                                     else:
                                         new_url = f"https://t.me/{normalized_destination}/{sent.id}"
-                                    out.write(new_url + "\n")
+                                    legacy_out.write(new_url + "\n")
+                                    ts_out.write(new_url + "\n")
                                 print(f"Reposted media group {grouped_id} from {channel} to {normalized_destination} as {len(sent_msgs)} messages.")
                                 await asyncio.sleep(sleep_time)
                                 continue  # Skip the single-message send below
@@ -194,7 +208,8 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                                 dest_url = f"https://t.me/c/{normalized_destination[4:]}/{sent.id}"
                             else:
                                 dest_url = f"https://t.me/{normalized_destination}/{sent.id}"
-                            out.write(dest_url + "\n")
+                            legacy_out.write(dest_url + "\n")
+                            ts_out.write(dest_url + "\n")
                             print(f"Reposted message {msg_id} from {channel} to {normalized_destination} as {dest_url}.")
 
                             # Sleep between messages, but not after the last one
@@ -208,7 +223,8 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                     print(f"Invalid Telegram message URL: {url}", file=sys.stderr)
                     any_invalid = True
 
-    os.replace(temp_file, output_file)
-    print(f"Wrote new destination URLs to {output_file} (atomic write).")
+    os.replace(legacy_temp_file, legacy_output_file)
+    os.replace(ts_temp_file, ts_output_file)
+    print(f"Wrote new destination URLs to {legacy_output_file} (legacy) and {ts_output_file}.")
     if any_invalid:
         sys.exit(1)

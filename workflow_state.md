@@ -241,8 +241,19 @@ Step 1: Utilities layer
 - [x] ALL verification commands succeed (0 errors)
 - [ ] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
+2025-07-06: Step 2 Reposter timestamp file & tagging preparation implemented.
+Checklist:
+Step 2: Reposter write timestamped file (keep legacy)
+- [x] Implementation complete (project_config.md > Step 1)
+- [x] Tests executed and analyzed (project_config.md  > Step 2)
+- [x] ALL tests pass (60/60)
+- [x] Real account verification executed (`make repost`)
+- [x] ALL verification commands succeed (0 errors)
+- [ ] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Ready for next step
 
 ## Workflow History
+2322941 feat(utils): introduce shared file-naming helpers and tests
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
 
 ## ArchiveLog

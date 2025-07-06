@@ -15,12 +15,40 @@ Later phases introduce additional suffixes (``.deleted_at_…``) but the helpers
 here focus on the two patterns required for Plan step 1.
 """
 
+import os
+
+# NOTE: We define a lightweight copy of get_data_dirs here to avoid circular
+# imports.  This helper is pure-utility (no Telegram dependencies) and keeps
+# src.utils_files fully standalone.
+
+
+def _get_data_dirs():
+    """Return (input_dir, output_dir) matching the logic in src.reposter.
+
+    Duplicated here to avoid circular imports; kept minimal and in sync with
+    the original.
+    """
+
+    TEST_MODE = os.environ.get("TEST_MODE") == "1"
+
+    def _is_running_tests() -> bool:
+        import inspect
+
+        for frame in inspect.stack():
+            if 'pytest' in frame.filename or 'unittest' in frame.filename:
+                return True
+        return False
+
+    if TEST_MODE or _is_running_tests():
+        return "./tests/data/input", "./tests/data/output"
+    return "./data/input", "./data/output"
+
+
 from datetime import datetime
 import re
 from pathlib import Path
 from typing import Iterable, List
 
-from src.reposter import get_data_dirs
 
 __all__ = [
     "dest_slug",
@@ -110,7 +138,7 @@ def list_runs(dest_slug: str, status: Iterable[str] | None = None) -> List[Path]
     # Normalise to set for faster membership checks and ensure strings
     status_set = {str(s) for s in status}
 
-    _, output_dir_str = get_data_dirs()
+    _, output_dir_str = _get_data_dirs()
     output_dir = Path(output_dir_str)
     if not output_dir.exists():
         # Nothing to return
