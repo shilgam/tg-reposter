@@ -251,8 +251,27 @@ Step 2: Reposter write timestamped file (keep legacy)
 - [x] ALL verification commands succeed (0 errors)
 - [ ] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
+2025-07-06: Step 3 tagging previous run completed.
+Checklist:
+Step 3: Reposter marks previous untagged run
+- [x] Implementation complete
+- [x] Tests executed & analyzed
+- [x] ALL tests pass (63/63)
+- [ ] Real account verification executed (optional)
+- [ ] ALL verification commands succeed (n/a)
+- [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Ready for next step
+2025-07-06: Step 4 Delete auto-detect implemented.
+Checklist:
+Step 4: Delete auto-detect latest marked file
+- [x] Implementation complete
+- [x] Tests executed & analyzed
+- [x] ALL tests pass (65/65)
+- [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Ready for next step
 
 ## Workflow History
+5791ea3 feat(reposter): tag previous untagged run as .marked_for_deletion and add tests
 3c58ad6 feat(reposter): write timestamped slug file alongside legacy new_dest_urls.txt
 2322941 feat(utils): introduce shared file-naming helpers and tests
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
