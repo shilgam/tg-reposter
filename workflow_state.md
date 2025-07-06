@@ -2,8 +2,8 @@
 _Last updated: 2025-07-03_
 
 ## State
-Phase: BLUEPRINT
-Status: NEEDS_PLAN_APPROVAL
+Phase: CONSTRUCT
+Status: RUNNING
 CurrentItem: 16
 
 ## Plan
@@ -228,6 +228,8 @@ Action ▶
 - Manual smoke test: repost and delete both succeeded with no errors
 
 Marking Item 15 as done.
+2025-07-06: Reviewed project_config.md. Reconfirming current Phase=BLUEPRINT, Status=NEEDS_PLAN_APPROVAL. Presenting current ## Plan to user for approval.
+2025-07-06: User approved plan. Transitioning to Phase=CONSTRUCT, Status=RUNNING. Starting Step 0 – baseline tests.
 
 ## Workflow History
 <!-- RULE_GIT_COMMIT_01 stores commit SHAs and messages here -->
