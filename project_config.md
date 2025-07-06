@@ -24,14 +24,14 @@ Automate copying every message from a Telegram channel to channel so that the po
 - **Workflows:**
   - *Human-in-the-loop*:
     1. Run `make repost ARGS="--destination=<channel>"` to create new posts and verify them.
-    2. Run `make delete` to remove old posts (auto-detects `new_dest_urls.txt`) and verify deletions.
+    2. Run `make delete ARGS="--destination=<channel>"` to remove old posts (auto-detects latest `.marked_for_deletion.txt` file) and verify deletions.
   - *Fully automatic*:
     - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error. The sync command is now implemented and accepts the same flags as repost and delete. The delete command silently ignores extra shared flags, so you can use unified ARGS for all commands.
 
 - **Command logic:**
-  - `make repost`: Ensure or clear `new_dest_urls.txt` (archive if needed), repost each URL from `source_urls.txt`, appending new URLs. Stop on first error.
-  - `make delete`: Use `new_dest_urls.txt` by default or file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`. Silently ignores extra shared flags (`--source`, `--destination`, `--sleep`) for unified ARGS.
-  - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs. Accepts the same flags as repost and delete, aborts on any error.
+  - `make repost`: Read URLs from `source_urls.txt`, repost each URL, write new URLs to `{TIMESTAMP}_{slug}.txt`, and tag previous untagged run as `.marked_for_deletion.txt`. Stop on first error.
+  - `make delete`: Auto-detect latest `{TIMESTAMP}_{slug}.marked_for_deletion.txt` file for destination (requires `--destination`) or use file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_{slug}.deleted_at_{TIMESTAMP}.txt`. Silently ignores extra shared flags (`--source`, `--destination`, `--sleep`) for unified ARGS.
+  - `make sync`: Runs `repost` and, if successful, `delete` using destination for auto-detection. Accepts the same flags as repost and delete, aborts on any error.
 
 ## Critical Patterns & Conventions
 
@@ -81,12 +81,10 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 - **Key file roles:**
   - `source_urls.txt`: input, one Telegram message URL per line (required)
-  - `new_dest_urls.txt`: **dual-purpose file**
-    - output from `make repost` (new message URLs written here)
-    - input to `make delete` (URLs read from here by default)
+  - `{TIMESTAMP}_{slug}.txt`: output from `make repost` (new message URLs written here)
+  - `{TIMESTAMP}_{slug}.marked_for_deletion.txt`: tagged files ready for deletion
+  - `{TIMESTAMP}_{slug}.deleted_at_{TIMESTAMP}.txt`: processed deletion files (confirms deletions)
   - `dest_urls_to_delete.txt`: input, optional, URLs to delete (when using --delete-urls)
-  - `{TIMESTAMP}_old_dest_urls.txt`: output, archived previous URLs
-  - `{TIMESTAMP}_deleted.txt`: output, confirms deletions
 
 - **Other conventions:**
   - Timestamps: `YYYYMMDD_HHMMSS` (24h, optional ms)
@@ -96,7 +94,7 @@ Automate copying every message from a Telegram channel to channel so that the po
   - Every new feature ships with unit tests that stub Telegram I/O.
   - Unit tests use nested classes to organize by functional area.
   - Docs avoid tables unless tables are essential.
-  - `make delete` defaults to `new_dest_urls.txt` when `--delete-urls` is omitted (for easier interactive use). Use `make delete ARGS="--delete-urls=<file>"` to specify a file explicitly.
+  - `make delete` auto-detects the latest `.marked_for_deletion.txt` file when `--destination` is provided. Use `make delete ARGS="--delete-urls=<file>"` to specify a file explicitly.
 
 ## Constraints
 
@@ -113,6 +111,7 @@ Automate copying every message from a Telegram channel to channel so that the po
 ---
 
 ## Changelog
+- Completed full transition to timestamped file workflow: removed legacy new_dest_urls.txt, updated all code, tests, and docs; validated with tests and manual smoke flow.
 - Added sync command (repost + delete) with Makefile support, unified ARGS, robust flag handling, and full test/E2E coverage.
 - Added support for reposting Telegram albums (multi-media/grouped messages) as single albums, preserving captions and order, with full test and E2E coverage.
 - Added delete command with CLI and Makefile support, including file auto-detection, robust error handling, and comprehensive test coverage.

@@ -65,7 +65,7 @@ All commands are run via `make` and executed within a Docker container to ensure
 ### Human-in-the-loop Workflow
 
 1. `make repost ARGS="--destination=<channel>"` – user verifies new posts.
-2. `make delete` – user verifies deletions (uses `./data/output/new_dest_urls.txt`).
+2. `make delete ARGS="--destination=<channel>"` – user verifies deletions (auto-detects latest `.marked_for_deletion.txt` file).
 
 ### Fully Automatic Workflow
 
@@ -90,25 +90,26 @@ make repost ARGS="--sleep=0 --destination=<destination_channel>"
 
 **How it works:**
 1. Reads URLs from `./data/input/source_urls.txt` (or custom `--source` file).
-2. Archives existing `new_dest_urls.txt` to `{TIMESTAMP}_old_dest_urls.txt` if it exists.
-3. For each URL, reposts the message via Telethon and appends the new URL to `new_dest_urls.txt`.
+2. For each URL, reposts the message via Telethon and writes new URLs to `{TIMESTAMP}_{slug}.txt`.
+3. Tags any previous untagged run for the same destination as `.marked_for_deletion.txt`.
 4. Stops immediately on any error.
 
 ### `make delete`
 
-Deletes messages from a destination channel based on a list of URLs.
+Deletes messages from a destination channel based on auto-detected marked files or explicit file paths.
 
 **Usage:**
 ```bash
-make delete
+# Auto-detect latest .marked_for_deletion file for destination:
+make delete ARGS="--destination=<channel>"
 # Or, to use a custom delete file:
 make delete ARGS="--delete-urls=./path/to/your_delete_list.txt"
 ```
 
 **How it works:**
-1. Uses `./data/output/new_dest_urls.txt` by default, or the file specified by `--delete-urls`.
+1. Auto-detects the latest `{TIMESTAMP}_{slug}.marked_for_deletion.txt` file for the destination, or uses the file specified by `--delete-urls`.
 2. Deletes each message URL from the destination channel.
-3. On success, renames the processed file to `{TIMESTAMP}_deleted.txt`.
+3. On success, renames the processed file to `{TIMESTAMP}_{slug}.deleted_at_{TIMESTAMP}.txt`.
 4. Stops immediately on any error to ensure data integrity.
 
 ### `make sync`
@@ -119,14 +120,19 @@ Runs repost then delete operations sequentially, aborting on any error.
 ```bash
 make sync ARGS="--source=./data/input/_source_private.txt \
                 --destination=2763892937 \
-                --sleep=2 \
-                --delete-urls=./data/output/new_dest_urls.txt"
+                --sleep=2"
 ```
 
 - Accepts the same flags as repost and delete.
-- If repost succeeds, delete is run automatically.
+- If repost succeeds, delete is run automatically using the destination for auto-detection.
 - If any step fails, sync aborts and exits non-zero.
 
-### `make delete`
+### File Lifecycle
+
+The tool now uses a timestamped file lifecycle:
+
+1. **Repost**: Creates `{YYYYMMDD_HHMMSS}_{destination_slug}.txt` with new URLs
+2. **Tagging**: Previous untagged file becomes `{TIMESTAMP}_{slug}.marked_for_deletion.txt`
+3. **Delete**: Processes `.marked_for_deletion.txt` file, then renames to `{TIMESTAMP}_{slug}.deleted_at_{TIMESTAMP}.txt`
 
 **Note:** The delete command accepts extra shared flags (`--source`, `--destination`, `--sleep`) and silently ignores them. This enables unified ARGS for all commands.
