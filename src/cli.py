@@ -35,7 +35,7 @@ def login():
 
 
 @cli.command()
-@click.option("--delete-urls", required=False, default=None, help="File with message URLs to delete. If omitted, auto-detects the latest marked file or new_dest_urls.txt.")
+@click.option("--delete-urls", required=False, default=None, help="File with message URLs to delete. If omitted, the tool auto-detects the latest *.marked_for_deletion.txt file for the provided destination.")
 @click.option("--source", required=False, default=None, help="(Hidden) Ignored by delete.", hidden=True)
 @click.option("--destination", required=False, default=None, help="Destination channel (hidden, used for auto-detect)", hidden=True)
 @click.option("--sleep", required=False, default=None, type=float, help="(Hidden) Ignored by delete.", hidden=True)

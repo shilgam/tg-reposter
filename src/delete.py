@@ -21,33 +21,31 @@ async def delete_from_file(
     destination: Optional[str] = None,
 ) -> None:
     """
-    Async: Delete Telegram messages listed in the given file. If no file is provided,
-    use ./data/output/new_dest_urls.txt by default.
-    Parses URLs, extracts message IDs and destination channel, and deletes messages via Telethon.
-    Stops immediately on any error to ensure data integrity. On success, renames the processed file
-    to {TIMESTAMP}_deleted.txt.
+    Async: Delete Telegram messages listed in the given file. If *delete_urls_file* is ``None`` the
+    function will attempt to auto-detect the latest ``.marked_for_deletion`` file for the provided
+    *destination* channel.  The *destination* parameter **must** be supplied in this case; the
+    legacy fallback to ``new_dest_urls.txt`` has been removed.
+
+    The function parses URLs, extracts message IDs and destination channel, and deletes messages via
+    Telethon.  It stops immediately on any error to ensure data integrity.  On success, the
+    processed file is renamed to ``{publish_ts}_{slug}.deleted_at_{delete_ts}.txt``.
     """
     if delete_urls_file is None:
-        input_dir, output_dir = get_data_dirs()
+        if destination is None:
+            raise FileNotFoundError(
+                "No delete file provided and destination not specified for auto-detection."
+            )
 
-        if destination:
-            # Auto-detect latest .marked_for_deletion for given destination slug
-            norm_dest = str(normalize_channel_id(destination))
-            slug = dest_slug(norm_dest)
-            candidates = list_runs(slug, status=["marked_for_deletion"])
-            if not candidates:
-                raise FileNotFoundError(
-                    f"No .marked_for_deletion file found for destination '{destination}'."
-                )
-            delete_urls_file = str(candidates[0])
-        else:
-            # Fallback to legacy behaviour
-            default_file = os.path.join(output_dir, "new_dest_urls.txt")
-            if not os.path.exists(default_file):
-                raise FileNotFoundError(
-                    f"No new_dest_urls.txt found in {output_dir}/."
-                )
-            delete_urls_file = default_file
+        # Auto-detect latest .marked_for_deletion for given destination slug
+        _, output_dir = get_data_dirs()
+        norm_dest = str(normalize_channel_id(destination))
+        slug = dest_slug(norm_dest)
+        candidates = list_runs(slug, status=["marked_for_deletion"])
+        if not candidates:
+            raise FileNotFoundError(
+                f"No .marked_for_deletion file found for destination '{destination}'."
+            )
+        delete_urls_file = str(candidates[0])
 
     with open(delete_urls_file, 'r', encoding='utf-8') as f:
         urls = [line.strip() for line in f if line.strip()]

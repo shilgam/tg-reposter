@@ -249,7 +249,7 @@ Step 2: Reposter write timestamped file (keep legacy)
 - [x] ALL tests pass (60/60)
 - [x] Real account verification executed (`make repost`)
 - [x] ALL verification commands succeed (0 errors)
-- [ ] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
 2025-07-06: Step 3 tagging previous run completed.
 Checklist:
@@ -271,16 +271,32 @@ Step 4: Delete auto-detect latest marked file
 - [x] Ready for next step
 2025-07-06: Step 5 dual-timestamp rename done; 66 tests green. Ready for next step.
 2025-07-06: Step 6 CLI wiring: delete passes destination, tests green.
-
 Checklist:
 Step 6: CLI wiring for delete
 - [x] Implementation complete (CLI update)
 - [x] Tests executed and analyzed (66/66 pass)
 - [x] ALL real account verification commands succeed (earlier make sync)
-- [ ] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Ready for next step
+2025-07-06: Step 7 legacy removal completed:
+- src/reposter.py: removed legacy_output_file writing, only writes timestamped files
+- src/delete.py: removed new_dest_urls.txt fallback, requires destination for auto-detect
+- tests/test_file_repost.py: added _latest_output_file() helper, updated assertions
+- tests/test_file_delete.py: removed legacy auto-detection tests
+- src/cli.py: updated help text
+All legacy new_dest_urls.txt references eliminated. Ready for test validation.
+Checklist:
+Step 7: Remove legacy new_dest_urls.txt (code + tests)
+- [x] Implementation complete
+- [x] Tests executed and analyzed - fixed 2 failing tests, all 62 tests now pass
+- [x] ALL tests pass (zero "FAILED" entries)
+- [x] Real account verification executed (make sync)
+- [x] ALL verification commands succeed (0 errors)
+- [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
 
 ## Workflow History
+a16c183 feat(cli): forward hidden --destination to delete command for auto-detect
 096e44a feat(delete): add dual-timestamp rename `{publish}_{slug}.deleted_at_{ts}.txt`
 94c1ea9 feat(delete): auto-detect latest .marked_for_deletion file when destination provided
 5791ea3 feat(reposter): tag previous untagged run as .marked_for_deletion and add tests

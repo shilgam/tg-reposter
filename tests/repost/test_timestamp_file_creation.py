@@ -36,24 +36,3 @@ async def test_timestamp_file_written(temp_dirs, mock_telethon_client):
     with open(files[0]) as f:
         lines = [l.strip() for l in f if l.strip()]
     assert len(lines) == 1
-
-
-@pytest.mark.asyncio
-async def test_legacy_file_still_written(temp_dirs, mock_telethon_client):
-    """Verify that new_dest_urls.txt is still written for backward compatibility."""
-    # Arrange
-    input_dir, output_dir = get_data_dirs()
-    source_file = os.path.join(input_dir, "source_urls.txt")
-    os.makedirs(input_dir, exist_ok=True)
-    with open(source_file, "w") as f:
-        f.write(SOURCE_URL + "\n")
-
-    # Act
-    await repost_from_file(DEST_PUBLIC)
-
-    # Assert legacy file exists and non-empty
-    legacy_file = os.path.join(output_dir, "new_dest_urls.txt")
-    assert os.path.exists(legacy_file)
-    with open(legacy_file) as f:
-        lines = [l.strip() for l in f if l.strip()]
-    assert len(lines) == 1

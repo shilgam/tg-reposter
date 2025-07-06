@@ -107,9 +107,6 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
     input_file = source or os.path.join(input_dir, "source_urls.txt")
 
     # --- Output filenames ---
-    legacy_output_file = os.path.join(output_dir, "new_dest_urls.txt")
-    legacy_temp_file = legacy_output_file + ".tmp"
-
     from datetime import timedelta
 
     normalized_destination = str(normalize_channel_id(destination))
@@ -164,9 +161,8 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
             print(f"Could not resolve the destination entity '{destination}'. Error: {e}", file=sys.stderr)
             sys.exit(1)
 
-        # Open both temp files so we can write to each simultaneously
-        with open(legacy_temp_file, "w", encoding="utf-8") as legacy_out, \
-             open(ts_temp_file, "w", encoding="utf-8") as ts_out:
+        # Open the temp file for the new timestamped output
+        with open(ts_temp_file, "w", encoding="utf-8") as ts_out:
             for i, url in enumerate(source_urls):
                 channel, msg_id = parse_telegram_url(url)
                 if channel and msg_id:
@@ -204,7 +200,6 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                                         new_url = f"https://t.me/c/{normalized_destination[4:]}/{sent.id}"
                                     else:
                                         new_url = f"https://t.me/{normalized_destination}/{sent.id}"
-                                    legacy_out.write(new_url + "\n")
                                     ts_out.write(new_url + "\n")
                                 print(f"Reposted media group {grouped_id} from {channel} to {normalized_destination} as {len(sent_msgs)} messages.")
                                 await asyncio.sleep(sleep_time)
@@ -217,7 +212,6 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                                 dest_url = f"https://t.me/c/{normalized_destination[4:]}/{sent.id}"
                             else:
                                 dest_url = f"https://t.me/{normalized_destination}/{sent.id}"
-                            legacy_out.write(dest_url + "\n")
                             ts_out.write(dest_url + "\n")
                             print(f"Reposted message {msg_id} from {channel} to {normalized_destination} as {dest_url}.")
 
@@ -232,9 +226,8 @@ async def repost_from_file(destination, source=None, sleep_interval=None):
                     print(f"Invalid Telegram message URL: {url}", file=sys.stderr)
                     any_invalid = True
 
-    os.replace(legacy_temp_file, legacy_output_file)
     os.replace(ts_temp_file, ts_output_file)
-    print(f"Wrote new destination URLs to {legacy_output_file} (legacy) and {ts_output_file}.")
+    print(f"Wrote new destination URLs to {ts_output_file}.")
 
     # --- Tag previous untagged run for same destination ---
     from src.utils_files import list_runs  # local import to avoid top-level cycle

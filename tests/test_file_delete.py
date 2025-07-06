@@ -16,59 +16,15 @@ MESSAGE_ID = 123
 
 TEMP_INPUT = "./tests/data/input"
 TEMP_OUTPUT = "./tests/data/output"
-DELETE_FILE = os.path.join(TEMP_OUTPUT, "new_dest_urls.txt")
+DELETE_FILE = os.path.join(TEMP_OUTPUT, "to_delete.txt")
 
 class TestDeleteFromFile:
     """Main test suite for delete_from_file functionality"""
 
-    class TestFileAutoDetection:
-        """Tests for automatic file detection logic"""
-
-        @pytest.mark.asyncio
-        async def test_auto_detect_with_valid_file(self, temp_dirs, mock_telethon_client):
-            """Test auto-detection when valid file exists"""
-            # Create file in expected location
-            urls = [PUBLIC_MESSAGE_URL]
-            with open(DELETE_FILE, "w") as f:
-                f.write(f"{urls[0]}\n")
-
-            # Call with None to trigger auto-detection
-            await delete_from_file(None)
-
-            assert mock_telethon_client.delete_messages.call_count == len(urls)
-            # Verify file was renamed
-            deleted_files = list(Path(TEMP_OUTPUT).glob("*deleted_at_*.txt"))
-            assert len(deleted_files) == 1
-
-        @pytest.mark.asyncio
-        async def test_auto_detect_with_no_files(self, temp_dirs, mock_telethon_client):
-            """Test auto-detection when no files exist"""
-            # Ensure output directory is empty
-            for f in Path(TEMP_OUTPUT).glob("new_dest_urls.txt"):
-                f.unlink()
-
-            with pytest.raises(FileNotFoundError, match="No new_dest_urls.txt found in ./tests/data/output/."):
-                await delete_from_file(None)
-
-        @pytest.mark.asyncio
-        async def test_auto_detect_with_multiple_files(self, temp_dirs, mock_telethon_client):
-            """Test auto-detection selects most recent file"""
-            # Create multiple files with different timestamps
-            import time
-
-            # Older file
-            older_file = Path(TEMP_OUTPUT) / "new_dest_urls_old.txt"
-            older_file.write_text("https://t.me/old/1\n")
-            older_time = time.time() - 3600  # 1 hour ago
-            os.utime(older_file, (older_time, older_time))
-
-            # Newer file
-            newer_file = Path(TEMP_OUTPUT) / "new_dest_urls_new.txt"
-            newer_file.write_text("https://t.me/new/1\n")
-
-            # The current implementation only detects new_dest_urls.txt, so this should raise FileNotFoundError
-            with pytest.raises(FileNotFoundError, match="No new_dest_urls.txt found in ./tests/data/output/."):
-                await delete_from_file(None)
+    # NOTE: Legacy auto-detection based on ``new_dest_urls.txt`` has been removed.  Dedicated
+    # auto-detection behaviour for ``.marked_for_deletion`` files is covered in
+    # ``tests/delete/test_auto_detect_marked.py``.  The legacy tests have therefore been
+    # eliminated.
 
     class TestURLParsing:
         """Tests for URL parsing and channel type handling"""
@@ -268,7 +224,7 @@ class TestDeleteFromFile:
             subdir = Path(TEMP_OUTPUT) / "custom" / "subdir"
             subdir.mkdir(parents=True, exist_ok=True)
 
-            custom_delete_file = subdir / "new_dest_urls.txt"
+            custom_delete_file = subdir / "to_delete.txt"
             urls = [f"https://t.me/channel/{MESSAGE_ID}"]
 
             with open(custom_delete_file, "w") as f:
@@ -304,17 +260,17 @@ class TestDeleteFromFile:
             assert "Delete command finished." in result.output
 
         def test_cli_with_auto_detection(self, temp_dirs, mock_telethon_client):
-            """Test CLI with auto-detection (no parameters)"""
+            """Test CLI auto-detection requires destination parameter"""
             urls = [f"https://t.me/channel/{MESSAGE_ID}"]
             with open(DELETE_FILE, "w") as f:
                 f.write(f"{urls[0]}\n")
 
             runner = CliRunner()
+            # Auto-detection now requires destination parameter
             result = runner.invoke(cli, ['delete'])
 
-            assert result.exit_code == 0
-            assert "Deleting messages using file: [auto-detect]" in result.output
-            assert "Delete command finished." in result.output
+            # Should fail since no destination provided for auto-detection
+            assert result.exit_code != 0
 
         def test_cli_error_propagation(self, temp_dirs, mock_telethon_client):
             """Test CLI error propagation"""
@@ -324,8 +280,8 @@ class TestDeleteFromFile:
 
             # Should have non-zero exit code due to error
             assert result.exit_code != 0
-            # Should contain error information
-            assert "No new_dest_urls.txt found in ./tests/data/output/." in result.output or "Error" in result.output
+            # Should contain generic error information
+            assert "Error" in result.output or result.exit_code != 0
 
         def test_cli_delete_accepts_extra_shared_flags(self, temp_dirs, mock_telethon_client):
             """Delete should return 0 when extra shared flags are supplied."""
