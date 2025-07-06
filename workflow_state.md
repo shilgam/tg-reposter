@@ -100,12 +100,12 @@ CurrentItem: 16
 3. **For EACH Plan step, complete this workflow checklist:**
    ```
    Step X: [Description]
-   - [ ] Implementation complete (`project_config.md` > Step 1)
-   - [ ] Tests executed and analyzed (`project_config.md`  > Step 2)
+   - [ ] Implementation complete (`### Development Workflow` > Step 1)
+   - [ ] Tests executed and analyzed (`### Development Workflow`  > Step 2)
    - [ ] ALL tests pass (zero "FAILED" entries)
-   - [ ] Real account verification executed (`project_config.md` > Step 3)
-   - [ ] ALL verification commands succeed (zero errors)
-   - [ ] Trigger **RULE_GIT_COMMIT_01** to prompt for version control
+   - [ ] ALL real account verification commands succeed (zero errors) (`### Development Workflow` > Step 3)
+   - [ ] **Immediately** append brief reasoning output to ## Log (≤ 200 chars per write)
+   - [ ] **Immediately** trigger **RULE_GIT_COMMIT_01** to prompt for version control
    - [ ] Ready for next step
    ```
 4. **Before starting next Plan step**: Re-confirm previous step's checklist is complete
@@ -152,7 +152,7 @@ Trigger ▶ `Phase == VALIDATE && Status == COMPLETED`
 Action ▶
 1. Display menu:
       1. Skip commit
-      2-7. Draft commit subjects (optional body indented)
+      2-7. Draft commit subjects (max 72 chars); body optional, indented
 2. Wait for a single number (1-7).
 3. **If 1** → skip committing and resume workflow.
 4. **Else** →
