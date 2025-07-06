@@ -23,14 +23,20 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 - **Workflows:**
   - *Human-in-the-loop*:
-    1. Run `make repost ARGS="--destination=<channel>"` to create new posts and verify them.
-    2. Run `make delete` to remove old posts (auto-detects `new_dest_urls.txt`) and verify deletions.
+    1. Run `make repost ARGS="--destination=<channel>"` – writes to `YYYYMMDD_HHMMSS_{slug}.txt` and, if a prior un-tagged run exists, renames that file to `…_{slug}.marked_for_deletion.txt`.
+    2. Run `make delete ARGS="--destination=<channel>"` – auto-detects the most-recent `…_{slug}.marked_for_deletion.txt`, deletes those posts, then renames the file to `…_{slug}.deleted_at_YYYYMMDD_HHMMSS.txt`.
   - *Fully automatic*:
     - Run `make sync ARGS="--destination=<channel> --source=<file>"` to perform both repost and delete steps in sequence, aborting on any error. The sync command is now implemented and accepts the same flags as repost and delete. The delete command silently ignores extra shared flags, so you can use unified ARGS for all commands.
 
 - **Command logic:**
-  - `make repost`: Ensure or clear `new_dest_urls.txt` (archive if needed), repost each URL from `source_urls.txt`, appending new URLs. Stop on first error.
-  - `make delete`: Use `new_dest_urls.txt` by default or file specified by `--delete-urls`, delete each URL, then rename the file to `{TIMESTAMP}_deleted.txt`. Silently ignores extra shared flags (`--source`, `--destination`, `--sleep`) for unified ARGS.
+  - `make repost`:
+      • Reads URLs from `source_urls.txt`.
+      • Writes destination URLs to `YYYYMMDD_HHMMSS_{slug}.txt` via atomic move.
+      • If a previous untagged file for the same destination exists it is renamed to `…_{slug}.marked_for_deletion.txt`.
+  - `make delete`:
+      • Auto-detects the latest `…_{slug}.marked_for_deletion.txt` when `--delete-urls` is omitted (you must still supply `--destination` so the slug can be derived).
+      • Deletes all URLs in that file and then renames it to `…_{slug}.deleted_at_YYYYMMDD_HHMMSS.txt`.
+      • Silently ignores extra shared flags (`--source`, `--sleep`) so you can reuse the same ARGS string.
   - `make sync`: Runs `repost` and, if successful, `delete` using the new destination URLs. Accepts the same flags as repost and delete, aborts on any error.
 
 ## Critical Patterns & Conventions
@@ -81,12 +87,9 @@ Automate copying every message from a Telegram channel to channel so that the po
 
 - **Key file roles:**
   - `source_urls.txt`: input, one Telegram message URL per line (required)
-  - `new_dest_urls.txt`: **dual-purpose file**
-    - output from `make repost` (new message URLs written here)
-    - input to `make delete` (URLs read from here by default)
-  - `dest_urls_to_delete.txt`: input, optional, URLs to delete (when using --delete-urls)
-  - `{TIMESTAMP}_old_dest_urls.txt`: output, archived previous URLs
-  - `{TIMESTAMP}_deleted.txt`: output, confirms deletions
+  - `YYYYMMDD_HHMMSS_{slug}.txt`: output from `make repost` (new message URLs).
+  - `YYYYMMDD_HHMMSS_{slug}.marked_for_deletion.txt`: output; previous run waiting to be deleted.
+  - `YYYYMMDD_HHMMSS_{slug}.deleted_at_YYYYMMDD_HHMMSS.txt`: confirms deletions.
 
 - **Other conventions:**
   - Timestamps: `YYYYMMDD_HHMMSS` (24h, optional ms)

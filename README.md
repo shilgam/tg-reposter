@@ -62,10 +62,18 @@ All commands are run via `make` and executed within a Docker container to ensure
 - Run `make setup` to create the required data directories.
 - Run `make login` to create your Telegram session file.
 
-### Human-in-the-loop Workflow
+### Human-in-the-loop Workflow (timestamped files)
 
-1. `make repost ARGS="--destination=<channel>"` – user verifies new posts.
-2. `make delete` – user verifies deletions (uses `./data/output/new_dest_urls.txt`).
+1. `make repost ARGS="--destination=<channel>"`
+   – writes a file named `YYYYMMDD_HHMMSS_{slug}.txt` in `./data/output/`.
+   – if a previous un-tagged run exists for the same destination it is renamed to
+     `…_{slug}.marked_for_deletion.txt`.
+2. `make delete ARGS="--destination=<channel>"`
+   – auto-detects the latest `…_{slug}.marked_for_deletion.txt`, deletes those
+     messages, then renames that file to
+     `…_{slug}.deleted_at_YYYYMMDD_HHMMSS.txt`.
+
+> You can still supply `--delete-urls=<file>` to override auto-detection.
 
 ### Fully Automatic Workflow
 
@@ -89,10 +97,12 @@ make repost ARGS="--sleep=0 --destination=<destination_channel>"
 ```
 
 **How it works:**
-1. Reads URLs from `./data/input/source_urls.txt` (or custom `--source` file).
-2. Archives existing `new_dest_urls.txt` to `{TIMESTAMP}_old_dest_urls.txt` if it exists.
-3. For each URL, reposts the message via Telethon and appends the new URL to `new_dest_urls.txt`.
-4. Stops immediately on any error.
+1. Reads URLs from `./data/input/source_urls.txt` (or a custom `--source`).
+2. Writes destination URLs to `YYYYMMDD_HHMMSS_{slug}.txt` using an atomic
+   temp-file move for safety.
+3. If an older un-tagged run exists it is renamed to
+   `…_{slug}.marked_for_deletion.txt` so the next `make delete` will pick it up.
+4. Stops immediately on first error.
 
 ### `make delete`
 
@@ -106,10 +116,12 @@ make delete ARGS="--delete-urls=./path/to/your_delete_list.txt"
 ```
 
 **How it works:**
-1. Uses `./data/output/new_dest_urls.txt` by default, or the file specified by `--delete-urls`.
-2. Deletes each message URL from the destination channel.
-3. On success, renames the processed file to `{TIMESTAMP}_deleted.txt`.
-4. Stops immediately on any error to ensure data integrity.
+1. If `--delete-urls` is omitted the command derives the slug from
+   `--destination` and selects the most-recent
+   `…_{slug}.marked_for_deletion.txt`.
+2. Deletes each message listed in that file.
+3. On success, renames the file to `…_{slug}.deleted_at_YYYYMMDD_HHMMSS.txt`.
+4. Stops immediately on any error (atomic behaviour).
 
 ### `make sync`
 
@@ -119,8 +131,7 @@ Runs repost then delete operations sequentially, aborting on any error.
 ```bash
 make sync ARGS="--source=./data/input/_source_private.txt \
                 --destination=2763892937 \
-                --sleep=2 \
-                --delete-urls=./data/output/new_dest_urls.txt"
+                --sleep=2
 ```
 
 - Accepts the same flags as repost and delete.
@@ -129,4 +140,4 @@ make sync ARGS="--source=./data/input/_source_private.txt \
 
 ### `make delete`
 
-**Note:** The delete command accepts extra shared flags (`--source`, `--destination`, `--sleep`) and silently ignores them. This enables unified ARGS for all commands.
+**Note:** The delete command still accepts extra shared flags (`--source`, `--sleep`) and silently ignores them, enabling a single ARGS string for `make repost`, `make delete`, and `make sync` alike.
