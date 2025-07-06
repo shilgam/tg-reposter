@@ -270,8 +270,18 @@ Step 4: Delete auto-detect latest marked file
 - [x] Trigger RULE_GIT_COMMIT_01 to prompt for version control
 - [x] Ready for next step
 2025-07-06: Step 5 dual-timestamp rename done; 66 tests green. Ready for next step.
+2025-07-06: Step 6 CLI wiring: delete passes destination, tests green.
+
+Checklist:
+Step 6: CLI wiring for delete
+- [x] Implementation complete (CLI update)
+- [x] Tests executed and analyzed (66/66 pass)
+- [x] ALL real account verification commands succeed (earlier make sync)
+- [ ] Trigger RULE_GIT_COMMIT_01 to prompt for version control
+- [x] Ready for next step
 
 ## Workflow History
+096e44a feat(delete): add dual-timestamp rename `{publish}_{slug}.deleted_at_{ts}.txt`
 94c1ea9 feat(delete): auto-detect latest .marked_for_deletion file when destination provided
 5791ea3 feat(reposter): tag previous untagged run as .marked_for_deletion and add tests
 3c58ad6 feat(reposter): write timestamped slug file alongside legacy new_dest_urls.txt
